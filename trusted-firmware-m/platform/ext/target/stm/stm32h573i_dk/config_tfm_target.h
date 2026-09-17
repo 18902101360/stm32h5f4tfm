@@ -15,7 +15,25 @@
 /* Use external RNG to provide entropy */
 #define CRYPTO_EXT_RNG                         1
 
-/* ../ns_app/mbedtls-4.1.1/library/ssl_tls13_generic.c:1621 0x2005a788: psa_export_public_key() returned -141  */
+/*
+ * TLS 1.3 on NS needs a larger Crypto IPC scratch. Default 5120 is too small
+ * for psa_export_public_key() during the handshake (PSA_ERROR_INSUFFICIENT_MEMORY
+ * -141 at ssl_tls13_generic.c). This is NOT the mbedTLS engine heap.
+ */
 #define CRYPTO_IOVEC_BUFFER_SIZE  20480
+
+/*
+ * TF-PSA-Crypto engine heap (mbedtls_mem_buf in crypto_library.c). Default
+ * 0x3000 (12 KiB) is only enough for one RSA-4096 verify while the heap is
+ * empty. Each live TLS 1.3 session keeps PSA keys/contexts in this buffer, so
+ * a second WSS handshake fails at psa_verify_hash() with -141 while walking a
+ * Let's Encrypt chain (Root YR / ISRG Root X1 are RSA-4096). mbedTLS then
+ * reports MBEDTLS_ERR_X509_CERT_VERIFY_FAILED (-0x2700) / BADCERT_NOT_TRUSTED
+ * because x509_crt_find_parent_in() treats any non-zero check_signature() as
+ * a bad signature. 32 KiB covers two concurrent sessions plus one RSA-4096
+ * verify (and reconnect overlap). S data RAM is ~128 KiB.
+ */
+#undef CRYPTO_ENGINE_BUF_SIZE
+#define CRYPTO_ENGINE_BUF_SIZE                 0x8000
 
 #endif /* __CONFIG_TFM_TARGET_H__ */

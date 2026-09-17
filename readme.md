@@ -292,6 +292,17 @@ Windows 一键：`windows-tfm-tools\tfm_update.bat`（会调 `regression.bat`）
 
 
 
+## SPE Crypto 堆与 TLS 1.3 双 WSS（PSA -141）
+
+NS 用 mbedTLS 4.x + PSA 走 TF-M Crypto 分区时，有两块独立的安全侧缓冲，都曾因 `-141`（`PSA_ERROR_INSUFFICIENT_MEMORY`）踩过：
+
+| 宏 | 本平台值 | 用途 |
+|----|----------|------|
+| `CRYPTO_IOVEC_BUFFER_SIZE` | 20480 | Crypto IPC scratch；TLS 1.3 `psa_export_public_key()` |
+| `CRYPTO_ENGINE_BUF_SIZE` | `0x8000`（32 KiB） | `mbedtls_mem_buf`，RSA 模幂 / 会话密钥 |
+
+默认引擎堆 `0x3000` 只够空闲时做一次 RSA-4096 验签。Let's Encrypt 新根（Root YR / ISRG Root X1）是 4096 位，两路 WSS 并存时后建的那路会在 `psa_verify_hash()` 上失败；mbedTLS 把非 0 验签结果一律当成「证书不受信任」（`-0x2700`，flags 仅 `0x08`）。改这两项后必须 **重编并重烧 SPE**。定义在 `trusted-firmware-m/platform/ext/target/stm/stm32h573i_dk/config_tfm_target.h`。
+
 ## 文档
 
 

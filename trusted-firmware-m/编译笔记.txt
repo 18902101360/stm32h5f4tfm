@@ -42,3 +42,12 @@ trusted-firmware-m 编译笔记（分支 stm32H573P256-SPIFLASH）
 5.烧录
 	仓库根目录 ./flash_stm32h573.sh 只烧内部 primary（BL2/S/NS）。
 	改布局或换密钥后必须回归 + 重烧 BL2 + S + NS。
+
+6.Crypto 分区内存（TLS 1.3 双会话 / PSA -141）
+	平台覆盖：platform/ext/target/stm/stm32h573i_dk/config_tfm_target.h
+	CRYPTO_IOVEC_BUFFER_SIZE=20480  IPC 暂存（握手 psa_export_public_key）
+	CRYPTO_ENGINE_BUF_SIZE=0x8000   TF-PSA-Crypto 堆 mbedtls_mem_buf
+	默认 12 KiB 堆只够「0 个 TLS 会话时做一次 RSA-4096 验签」。
+	一路 WSS 建好后会话密钥常驻该堆，第二路走 Let's Encrypt（Root YR /
+	ISRG Root X1 为 RSA-4096）时 psa_verify_hash() 返回 -141，NS mbedTLS
+	会误报证书不受信任（-0x2700 / flags 0x08）。改堆大小必须重编并重烧 SPE。
