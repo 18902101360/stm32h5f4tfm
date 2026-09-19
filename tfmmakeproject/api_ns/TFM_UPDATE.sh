@@ -31,7 +31,7 @@ BINPATH_NSPE="$SCRIPTPATH/image_signing/scripts"
 PATH="/C/Program Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/":$PATH
 stm32programmercli="STM32_Programmer_CLI"
 # part ot be updated according to flash_layout.h
-slot0=0xc038000
+slot0=0xc044000
 slot1=0xc100000
 slot2=0x100000
 slot3=0x180000

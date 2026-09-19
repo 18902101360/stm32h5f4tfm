@@ -28,7 +28,7 @@ BINPATH="$SCRIPTPATH/bin"
 
 echo "Write TFM_Appli Secure"
 # part ot be updated according to flash_layout.h
-slot0=0xc038000
+slot0=0xc044000
 slot1=0xc100000
 boot=0xc00e000
 unused=

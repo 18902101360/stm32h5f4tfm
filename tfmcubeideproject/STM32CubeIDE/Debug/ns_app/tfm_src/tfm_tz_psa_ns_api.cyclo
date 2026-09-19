@@ -1,7 +1,0 @@
-../ns_app/tfm_src/tfm_tz_psa_ns_api.c:34:30:tfm_ns_check_safe_entry	1
-../ns_app/tfm_src/tfm_tz_psa_ns_api.c:39:30:tfm_ns_check_exit	1
-../ns_app/tfm_src/tfm_tz_psa_ns_api.c:53:10:psa_framework_version	1
-../ns_app/tfm_src/tfm_tz_psa_ns_api.c:63:10:psa_version	1
-../ns_app/tfm_src/tfm_tz_psa_ns_api.c:73:14:psa_call	5
-../ns_app/tfm_src/tfm_tz_psa_ns_api.c:94:14:psa_connect	1
-../ns_app/tfm_src/tfm_tz_psa_ns_api.c:99:6:psa_close	1

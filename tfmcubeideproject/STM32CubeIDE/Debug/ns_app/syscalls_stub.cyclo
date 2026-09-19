@@ -1,8 +1,0 @@
-../ns_app/syscalls_stub.c:18:6:_close	1
-../ns_app/syscalls_stub.c:23:6:_fstat	1
-../ns_app/syscalls_stub.c:28:6:_getpid	1
-../ns_app/syscalls_stub.c:33:6:_isatty	1
-../ns_app/syscalls_stub.c:38:6:_kill	1
-../ns_app/syscalls_stub.c:43:6:_lseek	1
-../ns_app/syscalls_stub.c:48:6:_read	1
-../ns_app/syscalls_stub.c:53:6:_write	1

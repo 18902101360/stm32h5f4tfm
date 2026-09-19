@@ -1,6 +1,0 @@
-../ns_app/tfm_log_raw.c:26:13:_tfm_flush_formatted_buffer	2
-../ns_app/tfm_log_raw.c:37:12:_tfm_string_output	2
-../ns_app/tfm_log_raw.c:50:12:_tfm_dec_num_output	5
-../ns_app/tfm_log_raw.c:77:12:_tfm_hex_num_output	3
-../ns_app/tfm_log_raw.c:97:12:_tfm_log_vprintf	15
-../ns_app/tfm_log_raw.c:160:5:tfm_log_printf	1

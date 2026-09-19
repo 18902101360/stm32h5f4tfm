@@ -30,8 +30,13 @@
 #include "psa/crypto.h"
 #include "psa/error.h"
 #include "psa/internal_trusted_storage.h"
-#include "psa/protected_storage.h"
 #include "psa/update.h"
+
+#include "mbedtls/ssl.h"
+#include "mbedtls/x509_crt.h"
+#include "mbedtls/x509_csr.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/version.h"
 
 static int g_fail;
 
@@ -122,65 +127,202 @@ static void test_its(void)
     check("psa_its_remove", status);
 }
 
-static void test_ps(void)
+static void test_tls_config(void)
 {
-    const psa_storage_uid_t uid = 0x0000000000001002ULL;
-    static const uint8_t payload[] = "ns-ps";
-    uint8_t readback[16];
-    size_t read_len = 0;
-    struct psa_storage_info_t info;
-    psa_status_t status;
+    mbedtls_ssl_config conf;
+    mbedtls_ssl_context ssl;
+    int ret;
 
-    LOG_MSG("PSA PS\r\n");
-    (void)psa_ps_remove(uid);
+    LOG_MSG("Mbed TLS %s (PSA client)\r\n", MBEDTLS_VERSION_STRING);
 
-    /* Empty UID must return -140 (PSA_ERROR_DOES_NOT_EXIST). That is
-     * not a SPE failure: get_info before the first set is defined this way.
-     */
-    memset(&info, 0, sizeof(info));
-    status = psa_ps_get_info(uid, &info);
-    if (status == PSA_ERROR_DOES_NOT_EXIST) {
-        LOG_MSG("  [PASS] psa_ps_get_info empty uid status=-140\r\n");
-    } else {
-        check("psa_ps_get_info empty uid", status);
+    mbedtls_ssl_config_init(&conf);
+    mbedtls_ssl_init(&ssl);
+
+    ret = mbedtls_ssl_config_defaults(&conf,
+                                      MBEDTLS_SSL_IS_CLIENT,
+                                      MBEDTLS_SSL_TRANSPORT_STREAM,
+                                      MBEDTLS_SSL_PRESET_DEFAULT);
+    check("mbedtls_ssl_config_defaults",
+          (ret == 0) ? PSA_SUCCESS : PSA_ERROR_GENERIC_ERROR);
+    if (ret != 0) {
+        mbedtls_ssl_free(&ssl);
+        mbedtls_ssl_config_free(&conf);
+        return;
     }
 
-    status = psa_ps_set(uid, sizeof(payload), payload, PSA_STORAGE_FLAG_NONE);
-    check("psa_ps_set", status);
+    mbedtls_ssl_conf_min_tls_version(&conf, MBEDTLS_SSL_VERSION_TLS1_2);
+    mbedtls_ssl_conf_max_tls_version(&conf, MBEDTLS_SSL_VERSION_TLS1_3);
 
-    memset(&info, 0, sizeof(info));
-    status = psa_ps_get_info(uid, &info);
-    check("psa_ps_get_info", status);
-    if ((status == PSA_SUCCESS) && (info.size != sizeof(payload))) {
-        LOG_MSG("  [FAIL] PS info size mismatch\r\n");
-        g_fail++;
-    }
+    ret = mbedtls_ssl_setup(&ssl, &conf);
+    check("mbedtls_ssl_setup TLS1.2-1.3",
+          (ret == 0) ? PSA_SUCCESS : PSA_ERROR_GENERIC_ERROR);
 
-    memset(readback, 0, sizeof(readback));
-    status = psa_ps_get(uid, 0, sizeof(readback), readback, &read_len);
-    check("psa_ps_get", status);
-    if ((status == PSA_SUCCESS) &&
-        ((read_len != sizeof(payload)) ||
-         (memcmp(readback, payload, sizeof(payload)) != 0))) {
-        LOG_MSG("  [FAIL] PS payload mismatch\r\n");
-        g_fail++;
-    }
-
-    status = psa_ps_remove(uid);
-    check("psa_ps_remove", status);
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_config_free(&conf);
 }
 
-static void log_fw_version(const char *label, const psa_fwu_component_info_t *info)
+static void check_mbed(const char *what, int ret)
 {
-    /* imgtool version: major.minor.revision[+build] */
-    LOG_MSG("  %s version=%u.%u.%u+%u state=%u max_size=%u\r\n",
-            label,
-            (unsigned)info->version.major,
-            (unsigned)info->version.minor,
-            (unsigned)info->version.patch,
-            (unsigned)info->version.build,
-            (unsigned)info->state,
-            (unsigned)info->max_size);
+    if (ret == 0) {
+        LOG_MSG("  [PASS] %s\r\n", what);
+    } else {
+        LOG_MSG("  [FAIL] %s ret=%d\r\n", what, ret);
+        g_fail++;
+    }
+}
+
+/*
+ * PKCS#10 write + parse, then issue a CRT with a SPE-resident CA key.
+ * Leaf/CA private keys stay in Crypto (mbedtls_pk_wrap_psa).
+ */
+static void test_csr(void)
+{
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t leaf_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t ca_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_pk_context leaf_pk;
+    mbedtls_pk_context ca_pk;
+    mbedtls_x509write_csr csr;
+    mbedtls_x509_csr parsed;
+    mbedtls_x509write_cert crt;
+    mbedtls_x509_crt parsed_crt;
+    static unsigned char csr_der[512];
+    static unsigned char csr_pem[768];
+    static unsigned char crt_der[1024];
+    static unsigned char crt_pem[1536];
+    static const unsigned char serial[] = { 0x01 };
+    char subject[128];
+    const unsigned char *csr_der_p;
+    psa_status_t status;
+    int ret;
+    int csr_der_len;
+    int crt_der_len;
+
+    LOG_MSG("Mbed TLS CSR parse / CRT write\r\n");
+
+    mbedtls_pk_init(&leaf_pk);
+    mbedtls_pk_init(&ca_pk);
+    mbedtls_x509write_csr_init(&csr);
+    mbedtls_x509_csr_init(&parsed);
+    mbedtls_x509write_crt_init(&crt);
+    mbedtls_x509_crt_init(&parsed_crt);
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
+    psa_set_key_algorithm(&attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
+    psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    psa_set_key_bits(&attr, 256);
+
+    status = psa_generate_key(&attr, &leaf_id);
+    check("psa_generate_key(leaf P-256)", status);
+    if (status != PSA_SUCCESS) {
+        goto cleanup;
+    }
+
+    ret = mbedtls_pk_wrap_psa(&leaf_pk, leaf_id);
+    check_mbed("mbedtls_pk_wrap_psa(leaf)", ret);
+    if (ret != 0) {
+        goto cleanup;
+    }
+
+    mbedtls_x509write_csr_set_md_alg(&csr, MBEDTLS_MD_SHA256);
+    mbedtls_x509write_csr_set_key(&csr, &leaf_pk);
+    ret = mbedtls_x509write_csr_set_subject_name(&csr, "CN=stm32h573-ns,O=tfm");
+    check_mbed("mbedtls_x509write_csr_set_subject_name", ret);
+    if (ret != 0) {
+        goto cleanup;
+    }
+
+    csr_der_len = mbedtls_x509write_csr_der(&csr, csr_der, sizeof(csr_der));
+    if (csr_der_len > 0) {
+        LOG_MSG("  [PASS] mbedtls_x509write_csr_der len=%d\r\n", csr_der_len);
+        csr_der_p = csr_der + sizeof(csr_der) - csr_der_len;
+    } else {
+        LOG_MSG("  [FAIL] mbedtls_x509write_csr_der ret=%d\r\n", csr_der_len);
+        g_fail++;
+        goto cleanup;
+    }
+
+    memset(csr_pem, 0, sizeof(csr_pem));
+    ret = mbedtls_x509write_csr_pem(&csr, csr_pem, sizeof(csr_pem));
+    check_mbed("mbedtls_x509write_csr_pem", ret);
+
+    ret = mbedtls_x509_csr_parse_der(&parsed, csr_der_p, (size_t)csr_der_len);
+    check_mbed("mbedtls_x509_csr_parse_der", ret);
+    if (ret != 0) {
+        goto cleanup;
+    }
+
+    ret = mbedtls_x509_dn_gets(subject, sizeof(subject), &parsed.subject);
+    if (ret >= 0) {
+        LOG_MSG("  [PASS] CSR subject\r\n");
+        LOG_MSG("  %s\r\n", subject);
+    } else {
+        check_mbed("mbedtls_x509_dn_gets", ret);
+        goto cleanup;
+    }
+
+    /* Leaf private key is no longer needed; subject public key is in parsed. */
+    mbedtls_x509write_csr_free(&csr);
+    mbedtls_x509write_csr_init(&csr);
+    mbedtls_pk_free(&leaf_pk);
+    mbedtls_pk_init(&leaf_pk);
+    (void)psa_destroy_key(leaf_id);
+    leaf_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    status = psa_generate_key(&attr, &ca_id);
+    check("psa_generate_key(CA P-256)", status);
+    if (status != PSA_SUCCESS) {
+        goto cleanup;
+    }
+
+    ret = mbedtls_pk_wrap_psa(&ca_pk, ca_id);
+    check_mbed("mbedtls_pk_wrap_psa(CA)", ret);
+    if (ret != 0) {
+        goto cleanup;
+    }
+
+    mbedtls_x509write_crt_set_md_alg(&crt, MBEDTLS_MD_SHA256);
+    mbedtls_x509write_crt_set_subject_key(&crt, &parsed.pk);
+    mbedtls_x509write_crt_set_issuer_key(&crt, &ca_pk);
+    ret = mbedtls_x509write_crt_set_serial_raw(&crt, serial, sizeof(serial));
+    check_mbed("mbedtls_x509write_crt_set_serial_raw", ret);
+    ret = mbedtls_x509write_crt_set_validity(&crt, "20260101000000", "20361231235959");
+    check_mbed("mbedtls_x509write_crt_set_validity", ret);
+    ret = mbedtls_x509write_crt_set_issuer_name(&crt, "CN=stm32h573-ca,O=tfm");
+    check_mbed("mbedtls_x509write_crt_set_issuer_name", ret);
+    ret = mbedtls_x509write_crt_set_subject_name(&crt, "CN=stm32h573-ns,O=tfm");
+    check_mbed("mbedtls_x509write_crt_set_subject_name", ret);
+    ret = mbedtls_x509write_crt_set_basic_constraints(&crt, 0, -1);
+    check_mbed("mbedtls_x509write_crt_set_basic_constraints", ret);
+
+    crt_der_len = mbedtls_x509write_crt_der(&crt, crt_der, sizeof(crt_der));
+    if (crt_der_len > 0) {
+        LOG_MSG("  [PASS] mbedtls_x509write_crt_der len=%d\r\n", crt_der_len);
+    } else {
+        LOG_MSG("  [FAIL] mbedtls_x509write_crt_der ret=%d\r\n", crt_der_len);
+        g_fail++;
+        goto cleanup;
+    }
+
+    memset(crt_pem, 0, sizeof(crt_pem));
+    ret = mbedtls_x509write_crt_pem(&crt, crt_pem, sizeof(crt_pem));
+    check_mbed("mbedtls_x509write_crt_pem", ret);
+
+    ret = mbedtls_x509_crt_parse_der(&parsed_crt,
+                                     crt_der + sizeof(crt_der) - crt_der_len,
+                                     (size_t)crt_der_len);
+    check_mbed("mbedtls_x509_crt_parse_der", ret);
+
+cleanup:
+    psa_reset_key_attributes(&attr);
+    mbedtls_x509write_csr_free(&csr);
+    mbedtls_x509write_crt_free(&crt);
+    mbedtls_x509_csr_free(&parsed);
+    mbedtls_x509_crt_free(&parsed_crt);
+    mbedtls_pk_free(&leaf_pk);
+    mbedtls_pk_free(&ca_pk);
+    (void)psa_destroy_key(leaf_id);
+    (void)psa_destroy_key(ca_id);
 }
 
 static void test_fwu_query(void)
@@ -190,21 +332,20 @@ static void test_fwu_query(void)
 
     LOG_MSG("PSA FWU query\r\n");
 
-    /* Component 0 = Secure. Kept on purpose: download/install is disabled,
-     * but NS still reads the running S image version from BL2 shared data.
-     */
     memset(&info, 0, sizeof(info));
     status = psa_fwu_query(FWU_COMPONENT_ID_SECURE, &info);
     check("psa_fwu_query(S)", status);
     if (status == PSA_SUCCESS) {
-        log_fw_version("S", &info);
+        LOG_MSG("  S  state=%u max_size=%u\r\n",
+                (unsigned)info.state, (unsigned)info.max_size);
     }
 
     memset(&info, 0, sizeof(info));
     status = psa_fwu_query(FWU_COMPONENT_ID_NONSECURE, &info);
     check("psa_fwu_query(NS)", status);
     if (status == PSA_SUCCESS) {
-        log_fw_version("NS", &info);
+        LOG_MSG("  NS state=%u max_size=%u\r\n",
+                (unsigned)info.state, (unsigned)info.max_size);
     }
 }
 
@@ -220,7 +361,7 @@ int main(void)
         }
     }
 
-    LOG_MSG("\r\nNS-SMOKE\r\n");
+    LOG_MSG("\r\nNS-SMOKE klp\r\n");
     LOG_MSG("Non-Secure system starting...\r\n");
 
     if (tfm_ns_interface_init() != OS_WRAPPER_SUCCESS) {
@@ -231,8 +372,9 @@ int main(void)
     LOG_MSG("tfm_ns_interface_init ok\r\n");
 
     test_crypto();
+    test_tls_config();
+    test_csr();
     test_its();
-    test_ps();
     test_fwu_query();
 
     if (g_fail == 0) {

@@ -89,7 +89,7 @@ if /I "%KIND%"=="ns" (
     set "VERSION=%MCUBOOT_IMAGE_VERSION_S%"
     set "SEC_CNT=%MCUBOOT_SECURITY_COUNTER_S%"
     set "DEP=(1, %MCUBOOT_NS_IMAGE_MIN_VER%)"
-    set "SLOT_HINT=S   512KB @ 0x0C038000"
+    set "SLOT_HINT=S   512KB @ 0x0C044000"
     set "KIND_UP=S"
 )
 

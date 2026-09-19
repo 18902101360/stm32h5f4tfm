@@ -54,7 +54,7 @@ py -3 -m pip install -r requirements.txt
 
 | 镜像 | 地址 | 签完大小 |
 |---|---|---|
-| `*_s_signed.bin` | `0x0C038000` | 512 KB |
+| `*_s_signed.bin` | `0x0C044000` | 512 KB |
 | `*_ns_signed.bin` | `0x0C100000` | 1024 KB |
 
 `layout/signing_layout_{s,ns}.o` 决定 `--pad` 后的槽大小，必须和 SPE 的 `flash_layout.h` 一致。`config` 里 `MCUBOOT_UPGRADE_STRATEGY=OVERWRITE_ONLY`（与本分支 BL2 相同）。

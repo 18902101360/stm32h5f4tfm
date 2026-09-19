@@ -50,10 +50,10 @@
  * 0x0001_0000 BL2 - MCUBoot (96 KB)
  * 0x0002_8000 OTP Write Protect (16 KB)
  * 0x0002_C000 NV counters area (16 KB)
- * 0x0003_0000 Secure Storage Area (16 KB)
- * 0x0003_4000 Internal Trusted Storage Area (16 KB)
- * 0x0003_8000 Secure image     primary slot (512 KB)  [Bank1]
- * 0x000B_8000 unused Bank1 gap (288 KB, SECWM1 keeps it Secure)
+ * 0x0003_0000 Secure Storage Area (64 KB)
+ * 0x0004_0000 Internal Trusted Storage Area (16 KB)
+ * 0x0004_4000 Secure image     primary slot (512 KB)  [Bank1]
+ * 0x000C_4000 unused Bank1 gap (240 KB, SECWM1 keeps it Secure)
  * 0x0010_0000 Non-secure image primary slot (1024 KB) [entire Bank2]
  *
  * NS execute is Bank2-only so it does not cross the 1 MB flash bank at 0x100000.
@@ -150,7 +150,7 @@
 #endif /*  (FLASH_NV_COUNTER_AREA_SIZE % FLASH_AREA_IMAGE_SECTOR_SIZE) != 0 */
 
 /* Secure Storage (PS) Service definitions */
-#define FLASH_PS_AREA_SIZE             (FLASH_AREA_IMAGE_SECTOR_SIZE+FLASH_AREA_IMAGE_SECTOR_SIZE)
+#define FLASH_PS_AREA_SIZE             (8 * FLASH_AREA_IMAGE_SECTOR_SIZE) /* 64 KB */
 #define FLASH_PS_AREA_OFFSET           (FLASH_NV_COUNTERS_AREA_OFFSET+FLASH_NV_COUNTERS_AREA_SIZE)
 
 /* Control Secure Storage (PS) Service definitions*/
