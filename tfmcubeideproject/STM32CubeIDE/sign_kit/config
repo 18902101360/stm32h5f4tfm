@@ -1,5 +1,5 @@
 # STM32H5F4 signing defaults (must match the SPE / BL2 on the board).
-# S slot 352 KB @ 0x0C038000, NS slot 1200 KB @ 0x0C090000, BL2_TRAILER=0x3000.
+# S slot 352 KB @ 0x0C078000, NS slot 1200 KB @ 0x0C0D0000, BL2_TRAILER=0x3000.
 # Edit these if you rebuilt SPE with different MCUboot options.
 
 BL2_HEADER_SIZE=0x400
