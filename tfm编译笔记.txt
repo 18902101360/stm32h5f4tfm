@@ -1,4 +1,5 @@
-本仓库编译笔记（分支 stm32H573P256-SPIFLASH）
+本仓库编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e）
+布局 / 密钥 / 烧录与 stm32H573P256-SPIFLASH-bl2-public-key 相同。本分支 CubeIDE NS 含 Mbed TLS 4.1.1，可解析 CSR、自行签发证书。
 平台：STM32H573 + TrustZone + MCUboot（MCUBOOT_IMAGE_NUMBER=2，签名 EC-P256）
 推荐环境：Ubuntu 22.04，ARM GNU Toolchain 14.3.1
 
@@ -39,7 +40,7 @@ SPI 0x100000 ≠ CPU NS 执行地址 0x0C100000。
 	应看到 14.3.1
 
 4.进入本仓库根目录（含 buildtfm.sh、trusted-firmware-m、tf-m-tests）
-	git checkout stm32H573P256-SPIFLASH
+	git checkout cursor/cubeide-mbedtls-from-7z-a11e
 
 5.安装 Python 依赖
 	不需要在 trusted-firmware-m 里单独建 .venv。

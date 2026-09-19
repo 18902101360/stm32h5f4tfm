@@ -1,4 +1,5 @@
-本仓库各工程编译笔记索引（分支 stm32H573P256-SPIFLASH）
+本仓库各工程编译笔记索引（分支 cursor/cubeide-mbedtls-from-7z-a11e）
+布局 / 密钥继承自 stm32H573P256-SPIFLASH-bl2-public-key。本分支额外：CubeIDE NS Mbed TLS 4.1.1、CSR 解析、自行签发证书。
 
 完整 TF-M 编译 / 烧录 / 布局 / 升级：
 	./tfm编译笔记.txt

@@ -2,7 +2,11 @@
 
 工程名：`tfmminiproject`。目录：`tfmcubeideproject/STM32CubeIDE/`。
 
-NS 应用在 `ns_app/`（含从原 `tfmcubeideproject.7z` 展开的 Mbed TLS 4.1.1）。SPE 导出在 `spe/`（只链接，不要当 NS 源码编译）。`spe/` 与 `sign_kit/` 必须与本分支当前 SPE/BL2 一致：**S 512 KB / NS 1 MB（Bank2）**，`OVERWRITE_ONLY`。
+所在分支：`cursor/cubeide-mbedtls-from-7z-a11e`（基于 `stm32H573P256-SPIFLASH-bl2-public-key`）。仓库总览见根目录 [`readme.md`](../../readme.md)。
+
+相对父分支：展开并删除根目录 `tfmcubeideproject.7z`；用当前 SPE/`sign_kit` 覆盖 7z 里旧的 320/576 KB、SWAP 布局；NS 编入 Mbed TLS 4.1.1；打开 CSR 解析与自行签发证书。
+
+NS 应用在 `ns_app/`。SPE 导出在 `spe/`（只链接，不要当 NS 源码编译）。`spe/` 与 `sign_kit/` 必须与本分支当前 SPE/BL2 一致：**S 512 KB / NS 1 MB（Bank2）**，`OVERWRITE_ONLY`。
 
 ## Mbed TLS 4.1.1（PSA 客户端）
 
@@ -22,7 +26,16 @@ NS 侧跑 TLS 1.2 / TLS 1.3 握手状态机和 X.509 解析。AES / SHA / 随机
 
 头文件顺序必须是 **Mbed TLS 4.1.1 在前，`api_ns` 在后**，否则会用到 SPE 旧的 `mbedtls/pk.h`。
 
-CSR / CRT：`ns_crypto_user.h` 打开 `MBEDTLS_PK_WRITE_C` / `MBEDTLS_PEM_WRITE_C`。编入 `x509_create.c`、`x509write.c`、`x509write_csr.c`、`x509_csr.c`（解析 CSR）、`x509write_crt.c`（签发证书）、`pkwrite.c`、`psa_util.c`。`test_csr()`：SPE 生成 P-256 → 写 PKCS#10 → 解析 CSR → 用第二把 CA 密钥签发 CRT，再解析该 CRT。
+CSR / CRT：`ns_crypto_user.h` 打开 `MBEDTLS_PK_WRITE_C` / `MBEDTLS_PEM_WRITE_C`。编入 `x509_create.c`、`x509write.c`、`x509write_csr.c`、`x509_csr.c`（解析 CSR）、`x509write_crt.c`（签发证书）、`pkwrite.c`、`psa_util.c`。私钥不导出 NS，签名走 `mbedtls_pk_wrap_psa`。
+
+| 场景 | API |
+|---|---|
+| 解析 PKCS#10 CSR（设备当 CA） | `mbedtls_x509_csr_parse` / `_parse_der` |
+| 自行签发证书 | `mbedtls_x509write_crt_der` / `_pem` |
+| 解析 CA 发回的证书 | `mbedtls_x509_crt_parse` / `_parse_der` |
+| 本机生成 CSR 交给外部 CA | `mbedtls_x509write_csr_der` / `_pem` |
+
+`test_csr()` 冒烟：SPE 生成 P-256 → 写 PKCS#10 → 解析 CSR → 用第二把 CA 密钥签发 CRT，再解析该 CRT。
 
 ### 不要编译
 

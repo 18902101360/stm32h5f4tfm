@@ -10,10 +10,46 @@
 | `stm32h573p256` | **EC-P256** | 仅改 MCUboot 镜像签名算法与配套密钥 |
 | `stm32H573P256-SPIFLASH` | **EC-P256** | 基于 `stm32h573p256`：NS 执行槽 1 MB，升级槽在外部 W25Q32 |
 | `stm32H573P256-SPIFLASH-bl2-public-key` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH`：BL2 OTP ROTPK 可只用 `keys/` 公钥 |
+| `cursor/cubeide-mbedtls-from-7z-a11e` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH-bl2-public-key`：展开 CubeIDE Mbed TLS 4.1.1，对齐当前 SPE/BL2，打开 CSR 解析与自行签发证书 |
 
-本文档所在分支为 **`stm32H573P256-SPIFLASH-bl2-public-key`**。
+本文档所在分支为 **`cursor/cubeide-mbedtls-from-7z-a11e`**。Flash 布局、升级路径、BL2 公钥 ROTPK 与父分支 `stm32H573P256-SPIFLASH-bl2-public-key` 相同。
 
-### 相对 `stm32H573P256-SPIFLASH` 改了什么（本分支）
+### 相对 `stm32H573P256-SPIFLASH-bl2-public-key` 改了什么（本分支）
+
+SPE / BL2 / 密钥 / 烧录地址都没改。只动 **CubeIDE NS 工程**（`tfmcubeideproject/`）：
+
+1. 把仓库根目录原来的 `tfmcubeideproject.7z` **整份展开覆盖** `tfmcubeideproject/`，再删掉压缩包（不要再当源码树用）。
+2. 用本仓库当前 SPE 导出和 `sign_kit` **覆盖 7z 里旧的布局**（7z 仍是旧的 320/576 KB、SWAP；当前必须是 **S 512 KB / NS 1 MB Bank2、`OVERWRITE_ONLY`**）。
+3. NS 侧编入 Mbed TLS 4.1.1（PSA 客户端：密码学走 SPE `psa_*` + `s_veneers.o`）。
+4. 打开 PKCS#10 **CSR 生成 / 解析** 和 **自行签发 X.509 证书**（见下一节）。
+
+CubeIDE 工程说明：[`tfmcubeideproject/STM32CubeIDE/README.md`](./tfmcubeideproject/STM32CubeIDE/README.md)。
+
+### NS Mbed TLS：解析 CSR、自行签发证书
+
+配置在 `ns_crypto_user.h`：`MBEDTLS_PK_WRITE_C`、`MBEDTLS_PEM_WRITE_C`。Makefile / `.cproject` **编入** `x509write_csr.c`、`x509_csr.c`、`x509write_crt.c`、`pkwrite.c`、`psa_util.c`（仍排除 `net_sockets.c`、软件 AES/SHA、server/DTLS）。私钥留在 SPE，NS 用 `mbedtls_pk_wrap_psa` 签名。
+
+| 场景 | 用哪个 API |
+|------|------------|
+| 设备当 CA，解析别人发来的 PKCS#10 CSR | `mbedtls_x509_csr_parse` / `mbedtls_x509_csr_parse_der` |
+| 设备当 CA，用 SPE 里的 CA 密钥签发证书 | `mbedtls_x509write_crt_der` / `mbedtls_x509write_crt_pem` |
+| 外部 CA 回的是证书（不是 CSR） | `mbedtls_x509_crt_parse` / `mbedtls_x509_crt_parse_der` |
+| 本机生成 PKCS#10 交给外部 CA | `mbedtls_x509write_csr_der` / `mbedtls_x509write_csr_pem` |
+
+`ns_app/main.c` 的 `test_csr()` 冒烟：SPE 生成叶密钥 → 写 CSR → 解析 CSR → 第二把 CA 密钥签发 CRT → 再解析 CRT。`test_tls_config()` 只做 `mbedtls_ssl_setup`，**没有 TCP/BIO，不会真正握手**。
+
+命令行编 NS：
+
+```bash
+cd tfmcubeideproject/STM32CubeIDE/ns_app
+make -j$(nproc)
+cd ../sign_kit
+./sign.sh ../ns_app/out/tfm_ns.bin
+```
+
+产物烧内部 Bank2 `0x0C100000`，必须与同一轮 `tfm_s` / `s_veneers.o` 配套。
+
+### 相对 `stm32H573P256-SPIFLASH` 改了什么（`stm32H573P256-SPIFLASH-bl2-public-key`）
 
 Flash 布局、升级路径、签名算法与 `stm32H573P256-SPIFLASH` 相同。只改 **编 BL2 时 OTP 里 ROTPK 哈希从哪来**：
 
@@ -103,7 +139,7 @@ makefile 工程同理 →  tfmmakeproject/api_ns/
 2. **TF-M SPE 签名**：默认密钥改为 `root-EC-P256.pem` / `root-EC-P256_1.pem`；`buildtfm.sh` 带 `SIG=` stamp 并 `-UMCUBOOT_KEY_S/NS`
 3. **tf-m-tests**：NS 测试镜像随 SPE 导出的 `api_ns` 密钥签名（无需单独改测试仓密钥）
 4. **makefile 工程**：`tfmmakeproject/api_ns/image_signing/keys/`（及 `sign_kit/keys/`）
-5. **CubeIDE 工程**：`sign_kit/keys/` 与 `spe/api_ns/image_signing/keys/`；NS 含 Mbed TLS 4.1.1（`tfmcubeideproject/STM32CubeIDE/ns_app/mbedtls-4.1.1`），布局与本分支 SPE/BL2 相同
+5. **CubeIDE 工程**：`sign_kit/keys/` 与 `spe/api_ns/image_signing/keys/`；本分支 NS 含 Mbed TLS 4.1.1（`tfmcubeideproject/STM32CubeIDE/ns_app/mbedtls-4.1.1`），可解析 CSR、自行签发 CRT，布局与 SPE/BL2 相同
 6. **独立签名工具 / 压缩包**：根目录 `sign_kit.zip`、`ns_make_project.zip` 内密钥与样例签名镜像
 7. **Linux 一键烧录**：根目录 `./flash_stm32h573.sh`（回归 + 烧 BL2/S/NS；Windows 仍用 `windows-tfm-tools\tfm_update.bat`）
 
@@ -270,7 +306,7 @@ imgtool verify trusted-firmware-m/build_ns/bin/tfm_ns_signed.bin
 仓库根目录 `./flash_stm32h573.sh`：先写 option bytes（含全片擦除），再烧 **BL2 + S + NS**。需已安装 `STM32_Programmer_CLI`，板子用 ST-Link。
 
 ```bash
-git checkout stm32H573P256-SPIFLASH
+git checkout cursor/cubeide-mbedtls-from-7z-a11e
 ./buildtfm.sh test          # 或 prod
 ./flash_stm32h573.sh        # 一键：回归 + 烧录
 # ./flash_stm32h573.sh download     # 只烧，不擦片
@@ -311,7 +347,8 @@ NS 用 mbedTLS 4.x + PSA 走 TF-M Crypto 分区时，有两块独立的安全侧
 - [SPE / BL2](./trusted-firmware-m/编译笔记.txt)
 - [NS 回归测试](./tf-m-tests/编译笔记.txt)
 - [makefile NS](./tfmmakeproject/编译笔记.txt)
-- [CubeIDE NS](./tfmcubeideproject/编译笔记.txt)
+- [CubeIDE NS 编译笔记](./tfmcubeideproject/编译笔记.txt)
+- [CubeIDE NS + Mbed TLS / CSR](./tfmcubeideproject/STM32CubeIDE/README.md)
 - 注意：如果编译不通过可以删除仓库根目录 `.venv` 后重新 `./buildtfm.sh`。
 
 ## 硬件平台
@@ -332,7 +369,7 @@ NS 用 mbedTLS 4.x + PSA 走 TF-M Crypto 分区时，有两块独立的安全侧
 
 - 增加 tfmcubeideproject 非安全侧工程可以使用stm32cubeide开发，这是基于make工程 tfmmakeproject 移植而来。
 
-- CubeIDE NS（`tfmcubeideproject`）含 Mbed TLS 4.1.1；原 `tfmcubeideproject.7z` 已展开进树并删除。`spe`/`sign_kit` 与当前 SPE/BL2 的 512 KB / 1 MB 布局对齐。本分支密钥为 **EC-P256**（`master` 仍是 RSA-3072）。
+- 本分支（`cursor/cubeide-mbedtls-from-7z-a11e`）相对 `stm32H573P256-SPIFLASH-bl2-public-key`：展开并删除 `tfmcubeideproject.7z`；CubeIDE NS 含 Mbed TLS 4.1.1（PSA 客户端）；`spe`/`sign_kit` 与当前 SPE/BL2 的 512 KB / 1 MB、`OVERWRITE_ONLY` 对齐；可生成/解析 PKCS#10 CSR，并可自行签发 X.509 证书。密钥仍为 **EC-P256**（`master` 仍是 RSA-3072）。
 
 - 增加 windows-tfm-tools 该工具是windows系统的使用的回归脚本和烧录工具。
 
