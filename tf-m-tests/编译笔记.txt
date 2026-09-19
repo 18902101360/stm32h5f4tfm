@@ -1,4 +1,4 @@
-tf-m-tests 编译笔记（分支 stm32H573P256-SPIFLASH-bl2-public-key-mbedtls；布局同 stm32H573P256-SPIFLASH-bl2-public-key）
+tf-m-tests 编译笔记（分支 stm32H573P256-SPIFLASH-bl2-public-key-ps64；布局同 stm32H573P256-SPIFLASH-bl2-public-key）
 
 本目录是 TF-M 回归测试仓，与仓库根目录 trusted-firmware-m 平级。
 NS 测试镜像必须链接同一轮 SPE 导出的 api_ns（含 s_veneers.o 与签名密钥）。

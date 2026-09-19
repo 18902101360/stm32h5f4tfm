@@ -10,9 +10,9 @@
 | `stm32h573p256` | **EC-P256** | 仅改 MCUboot 镜像签名算法与配套密钥 |
 | `stm32H573P256-SPIFLASH` | **EC-P256** | 基于 `stm32h573p256`：NS 执行槽 1 MB，升级槽在外部 W25Q32 |
 | `stm32H573P256-SPIFLASH-bl2-public-key` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH`：BL2 OTP ROTPK 可只用 `keys/` 公钥 |
-| `stm32H573P256-SPIFLASH-bl2-public-key-mbedtls` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH-bl2-public-key`：CubeIDE Mbed TLS 4.1.1、CSR/签发；**PS 扩到 64 KB**，S 主槽改为 `0x0C044000` |
+| `stm32H573P256-SPIFLASH-bl2-public-key-ps64` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH-bl2-public-key`：CubeIDE Mbed TLS 4.1.1、CSR/签发；**PS 扩到 64 KB**，S 主槽改为 `0x0C044000` |
 
-本文档所在分支为 **`stm32H573P256-SPIFLASH-bl2-public-key-mbedtls`**。升级路径、BL2 公钥 ROTPK 与父分支相同；**PS 为 64 KB，S 烧录地址相对父分支后移 48 KB**。
+本文档所在分支为 **`stm32H573P256-SPIFLASH-bl2-public-key-ps64`**。升级路径、BL2 公钥 ROTPK 与父分支相同；**PS 为 64 KB，S 烧录地址相对父分支后移 48 KB**。
 
 ### 相对 `stm32H573P256-SPIFLASH-bl2-public-key` 改了什么（本分支）
 
@@ -308,7 +308,7 @@ imgtool verify trusted-firmware-m/build_ns/bin/tfm_ns_signed.bin
 仓库根目录 `./flash_stm32h573.sh`：先写 option bytes（含全片擦除），再烧 **BL2 + S + NS**。需已安装 `STM32_Programmer_CLI`，板子用 ST-Link。
 
 ```bash
-git checkout stm32H573P256-SPIFLASH-bl2-public-key-mbedtls
+git checkout stm32H573P256-SPIFLASH-bl2-public-key-ps64
 ./buildtfm.sh test          # 或 prod
 ./flash_stm32h573.sh        # 一键：回归 + 烧录
 # ./flash_stm32h573.sh download     # 只烧，不擦片
@@ -371,7 +371,7 @@ NS 用 mbedTLS 4.x + PSA 走 TF-M Crypto 分区时，有两块独立的安全侧
 
 - 增加 tfmcubeideproject 非安全侧工程可以使用stm32cubeide开发，这是基于make工程 tfmmakeproject 移植而来。
 
-- 本分支（`stm32H573P256-SPIFLASH-bl2-public-key-mbedtls`）相对 `stm32H573P256-SPIFLASH-bl2-public-key`：展开并删除 `tfmcubeideproject.7z`；CubeIDE NS 含 Mbed TLS 4.1.1（PSA 客户端）；`spe`/`sign_kit` 与当前 SPE/BL2 的 512 KB / 1 MB、`OVERWRITE_ONLY` 对齐；可生成/解析 PKCS#10 CSR，并可自行签发 X.509 证书。**PS 64 KB**，S 主槽 **`0x0C044000`**。密钥仍为 **EC-P256**（`master` 仍是 RSA-3072）。
+- 本分支（`stm32H573P256-SPIFLASH-bl2-public-key-ps64`）相对 `stm32H573P256-SPIFLASH-bl2-public-key`：展开并删除 `tfmcubeideproject.7z`；CubeIDE NS 含 Mbed TLS 4.1.1（PSA 客户端）；`spe`/`sign_kit` 与当前 SPE/BL2 的 512 KB / 1 MB、`OVERWRITE_ONLY` 对齐；可生成/解析 PKCS#10 CSR，并可自行签发 X.509 证书。**PS 64 KB**，S 主槽 **`0x0C044000`**。密钥仍为 **EC-P256**（`master` 仍是 RSA-3072）。
 
 - 增加 windows-tfm-tools 该工具是windows系统的使用的回归脚本和烧录工具。
 
