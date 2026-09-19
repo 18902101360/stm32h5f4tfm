@@ -1,6 +1,6 @@
 预置镜像与本分支内部布局一致：
   BL2  0x0C00E000（含版本检查：下载槽版本低于内部主槽则拒绝升级）
-  S    512 KB @ 0x0C038000（安全别名）/ 0x08038000
+  S    512 KB @ 0x0C044000（安全别名）/ 0x08044000
   NS   1 MB  @ 0x0C100000（Bank2）/ 0x08100000
 重新生成：./buildtfm.sh test 后把 bl2、tfm_s_signed、tfm_ns_signed、tfm_s_ns_signed 的 .bin/.hex 拷进本目录。
 BL2 须带串口字符串 Insufficient version in secondary slot，否则还是旧 boot。

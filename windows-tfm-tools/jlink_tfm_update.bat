@@ -7,7 +7,7 @@ rem  * secure alias 0x0Cxxxxxx are remapped (0x0C - 0x04000000 = 0x08).
 rem  * Hex files are converted with jlink_hex_ns_alias.py (Python).
 rem  *
 rem  * Prefer separate .bin (NS is entire Bank2, not packed after S):
-rem  *   tfm_s_signed.bin       0x08038000
+rem  *   tfm_s_signed.bin       0x08044000
 rem  *   tfm_ns_signed.bin      0x08100000
 rem  *   bl2.bin                0x0800E000
 rem  *   tfm_s_ns_signed.bin    fallback only; concatenated NS has the wrong offset
@@ -31,7 +31,7 @@ if defined SN_ARG set "sn_option=sn=%SN_ARG%"
 
 rem NS flash alias (J-Link). Secure alias is NS + 0x04000000.
 set "ADDR_BL2=0x0800E000"
-set "ADDR_S=0x08038000"
+set "ADDR_S=0x08044000"
 set "ADDR_NS=0x08100000"
 
 echo.
@@ -349,7 +349,7 @@ exit /b %ERRORLEVEL%
 
 :check_download
 type "%TEMP%\tfm_jlink_dl.txt"
-findstr /c:"0x0C038000" /c:"0x0C00E000" /c:"0x0C0B8000" /c:"0x0C100000" "%TEMP%\tfm_jlink_dl.txt" >nul
+findstr /c:"0x0C044000" /c:"0x0C00E000" /c:"0x0C0C4000" /c:"0x0C100000" "%TEMP%\tfm_jlink_dl.txt" >nul
 if not errorlevel 1 (
     echo.
     echo [FAIL] CubeProgrammer still used 0x0C alias. This is the old hex path.

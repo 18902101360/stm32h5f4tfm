@@ -7,7 +7,7 @@
 #   ./flash_stm32h573.sh all <ST-LINK SN>
 #   ./flash_stm32h573.sh download <SN>
 #
-# 地址（安全别名）：BL2 0x0C00E000，S 0x0C038000，NS 0x0C100000（Bank2）
+# 地址（安全别名）：BL2 0x0C00E000，S 0x0C044000，NS 0x0C100000（Bank2）
 # BOOT_UBE=0xB4（OEM-iRoT）。需要 STM32_Programmer_CLI，且 SWD 用 AP=1。
 # Windows 对应：windows-tfm-tools\tfm_update.bat
 #
@@ -24,7 +24,7 @@ NS_BIN_DEFAULT="${ROOT}/trusted-firmware-m/build_ns/bin/tfm_ns_signed.bin"
 NS_BIN_FALLBACK="${ROOT}/windows-tfm-tools/tfm_ns_signed.bin"
 
 BOOT_ADDR=0xc00e000
-SLOT_S=0xc038000
+SLOT_S=0xc044000
 SLOT_NS=0xc100000
 # MCUboot image magic little-endian 0x96f3b83d
 MAGIC_BYTES="3db8f396"

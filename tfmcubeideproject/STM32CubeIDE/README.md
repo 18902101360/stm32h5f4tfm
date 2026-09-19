@@ -4,9 +4,9 @@
 
 所在分支：`cursor/cubeide-mbedtls-from-7z-a11e`（基于 `stm32H573P256-SPIFLASH-bl2-public-key`）。仓库总览见根目录 [`readme.md`](../../readme.md)。
 
-相对父分支：展开并删除根目录 `tfmcubeideproject.7z`；用当前 SPE/`sign_kit` 覆盖 7z 里旧的 320/576 KB、SWAP 布局；NS 编入 Mbed TLS 4.1.1；打开 CSR 解析与自行签发证书。
+相对父分支：展开并删除根目录 `tfmcubeideproject.7z`；用当前 SPE/`sign_kit` 覆盖 7z 里旧的 320/576 KB、SWAP 布局；NS 编入 Mbed TLS 4.1.1；打开 CSR 解析与自行签发证书；**PS 64 KB**，S 主槽 **`0x0C044000`**。
 
-NS 应用在 `ns_app/`。SPE 导出在 `spe/`（只链接，不要当 NS 源码编译）。`spe/` 与 `sign_kit/` 必须与本分支当前 SPE/BL2 一致：**S 512 KB / NS 1 MB（Bank2）**，`OVERWRITE_ONLY`。
+NS 应用在 `ns_app/`。SPE 导出在 `spe/`（只链接，不要当 NS 源码编译）。`spe/` 与 `sign_kit/` 必须与本分支当前 SPE/BL2 一致：**S 512 KB @ `0x0C044000` / NS 1 MB（Bank2）**，`OVERWRITE_ONLY`，**PS 64 KB**。
 
 ## Mbed TLS 4.1.1（PSA 客户端）
 
@@ -77,7 +77,7 @@ cd tfmcubeideproject/STM32CubeIDE/sign_kit
 | 镜像 | 地址 |
 |---|---|
 | `bl2.bin` | `0x0C00E000` |
-| `tfm_s_signed.bin` | `0x0C038000`（512 KB） |
+| `tfm_s_signed.bin` | `0x0C044000`（512 KB） |
 | `tfm_ns_signed.bin` | `0x0C100000`（1 MB，Bank2；旧值 `0x0C088000` 已作废） |
 
 ST-Link VCP CN10：115200 8N1，**不要插 JP1**。UBE 保持 OEM-iRoT `0xB4`。
@@ -91,5 +91,5 @@ ST-Link VCP CN10：115200 8N1，**不要插 JP1**。UBE 保持 OEM-iRoT `0xB4`�
 | 文件 | 下载地址 | 执行地址（向量表 / VTOR） | 谁跳进去 |
 |------|----------|---------------------------|----------|
 | `bl2.bin` | `0x0C00E000` | `0x0C010000` | 复位。Option Bytes SECBOOTADD = `0xC0100`（即 `0x0C010000 >> 8`） |
-| `tfm_s_signed.bin` | `0x0C038000` | `0x0C038400` | BL2 验签通过后跳 SPE |
+| `tfm_s_signed.bin` | `0x0C044000` | `0x0C044400` | BL2 验签通过后跳 SPE |
 | `tfm_ns_signed.bin` | `0x0C100000`（安全别名，和 `0x08100000` 同一块 Flash） | `0x08100400` | SPE 切到 NS 后跳 NS 应用 |

@@ -10,18 +10,17 @@
 | `stm32h573p256` | **EC-P256** | 仅改 MCUboot 镜像签名算法与配套密钥 |
 | `stm32H573P256-SPIFLASH` | **EC-P256** | 基于 `stm32h573p256`：NS 执行槽 1 MB，升级槽在外部 W25Q32 |
 | `stm32H573P256-SPIFLASH-bl2-public-key` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH`：BL2 OTP ROTPK 可只用 `keys/` 公钥 |
-| `cursor/cubeide-mbedtls-from-7z-a11e` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH-bl2-public-key`：展开 CubeIDE Mbed TLS 4.1.1，对齐当前 SPE/BL2，打开 CSR 解析与自行签发证书 |
+| `cursor/cubeide-mbedtls-from-7z-a11e` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH-bl2-public-key`：CubeIDE Mbed TLS 4.1.1、CSR/签发；**PS 扩到 64 KB**，S 主槽改为 `0x0C044000` |
 
-本文档所在分支为 **`cursor/cubeide-mbedtls-from-7z-a11e`**。Flash 布局、升级路径、BL2 公钥 ROTPK 与父分支 `stm32H573P256-SPIFLASH-bl2-public-key` 相同。
+本文档所在分支为 **`cursor/cubeide-mbedtls-from-7z-a11e`**。升级路径、BL2 公钥 ROTPK 与父分支相同；**PS 为 64 KB，S 烧录地址相对父分支后移 48 KB**。
 
 ### 相对 `stm32H573P256-SPIFLASH-bl2-public-key` 改了什么（本分支）
-
-SPE / BL2 / 密钥 / 烧录地址都没改。只动 **CubeIDE NS 工程**（`tfmcubeideproject/`）：
 
 1. 把仓库根目录原来的 `tfmcubeideproject.7z` **整份展开覆盖** `tfmcubeideproject/`，再删掉压缩包（不要再当源码树用）。
 2. 用本仓库当前 SPE 导出和 `sign_kit` **覆盖 7z 里旧的布局**（7z 仍是旧的 320/576 KB、SWAP；当前必须是 **S 512 KB / NS 1 MB Bank2、`OVERWRITE_ONLY`**）。
 3. NS 侧编入 Mbed TLS 4.1.1（PSA 客户端：密码学走 SPE `psa_*` + `s_veneers.o`）。
 4. 打开 PKCS#10 **CSR 生成 / 解析** 和 **自行签发 X.509 证书**（见下一节）。
+5. **Protected Storage 从 16 KB 扩到 64 KB**（8 个 8 KB 扇区）。ITS 仍 16 KB，因此 S 主槽起点从 `0x0C038000` 挪到 **`0x0C044000`**（仍 512 KB）；Bank1 空隙变为 `0x0C0C4000–0x0C0FFFFF`（240 KB）。NS 仍整块 Bank2。改完必须 **回归并重烧 BL2 + S + NS**；旧 PS 文件系统不能沿用。
 
 CubeIDE 工程说明：[`tfmcubeideproject/STM32CubeIDE/README.md`](./tfmcubeideproject/STM32CubeIDE/README.md)。
 
@@ -73,9 +72,11 @@ Flash 布局、升级路径、签名算法与 `stm32H573P256-SPIFLASH` 相同。
 
 | 内容 | 位置 |
 |------|------|
-| S 执行 | 内部 Bank1 `0x0C038000`，512 KB |
+| S 执行 | 内部 Bank1 `0x0C044000`，512 KB（父分支为 `0x0C038000`；本分支 PS 64 KB 后移） |
 | NS 执行 | 内部 Bank2 `0x0C100000` / `0x08100000`，1 MB |
-| Bank1 空隙 | `0x0C0B8000–0x0C0FFFFF`（288 KB，SECWM1 保持 Secure） |
+| PS | 内部 `0x0C030000`，**64 KB** |
+| ITS | 内部 `0x0C040000`，16 KB |
+| Bank1 空隙 | `0x0C0C4000–0x0C0FFFFF`（240 KB，SECWM1 保持 Secure） |
 | S 下载 | W25Q32 `0x100000`，512 KB（命令偏移，不是片上 Bank2） |
 | NS 下载 | W25Q32 `0x180000`，1 MB |
 | 引脚 | SCK=PA5, MISO=PA6, MOSI=PA7, CS=PB2 |
@@ -129,7 +130,7 @@ makefile 工程同理 →  tfmmakeproject/api_ns/
 | `spe/out/appli_ns.pp.ld` 的 FLASH ORIGIN | `0x08100400` |
 | 签完的 NS 大小、烧录地址 | **1 MB**，`0x0C100000`（旧值 `0x0C088000` 是错的） |
 | `spe/api_ns/interface/lib/s_veneers.o` | 必须和板上 `tfm_s` **同一轮** SPE（只换 NS 会 NSC 跑飞） |
-| `TFM_UPDATE.sh` / `TFM_BIN2HEX.sh` | `slot0=0xc038000`，`slot1=0xc100000` |
+| `TFM_UPDATE.sh` / `TFM_BIN2HEX.sh` | `slot0=0xc044000`，`slot1=0xc100000` |
 
 ### 相对 `master` 改了什么（签名，继承自 `stm32h573p256`）
 
@@ -317,7 +318,7 @@ git checkout cursor/cubeide-mbedtls-from-7z-a11e
 | 镜像 | 地址 | 默认文件 |
 |------|------|----------|
 | BL2（含 OTP 区） | `0x0C00E000`（`bl2.hex` 另含 `0x0C028000` OTP） | `…/api_ns/bin/bl2.hex`（优先）或 `bl2.bin` |
-| S | `0x0C038000` | `…/api_ns/bin/tfm_s_signed.bin` |
+| S | `0x0C044000` | `…/api_ns/bin/tfm_s_signed.bin` |
 | NS | `0x0C100000` | `trusted-firmware-m/build_ns/bin/tfm_ns_signed.bin` |
 
 可用环境变量 `TFM_NS_BIN=` 指定其它已签名 NS。`BOOT_UBE=0xB4`（OEM-iRoT）。串口 **115200**。
@@ -369,7 +370,7 @@ NS 用 mbedTLS 4.x + PSA 走 TF-M Crypto 分区时，有两块独立的安全侧
 
 - 增加 tfmcubeideproject 非安全侧工程可以使用stm32cubeide开发，这是基于make工程 tfmmakeproject 移植而来。
 
-- 本分支（`cursor/cubeide-mbedtls-from-7z-a11e`）相对 `stm32H573P256-SPIFLASH-bl2-public-key`：展开并删除 `tfmcubeideproject.7z`；CubeIDE NS 含 Mbed TLS 4.1.1（PSA 客户端）；`spe`/`sign_kit` 与当前 SPE/BL2 的 512 KB / 1 MB、`OVERWRITE_ONLY` 对齐；可生成/解析 PKCS#10 CSR，并可自行签发 X.509 证书。密钥仍为 **EC-P256**（`master` 仍是 RSA-3072）。
+- 本分支（`cursor/cubeide-mbedtls-from-7z-a11e`）相对 `stm32H573P256-SPIFLASH-bl2-public-key`：展开并删除 `tfmcubeideproject.7z`；CubeIDE NS 含 Mbed TLS 4.1.1（PSA 客户端）；`spe`/`sign_kit` 与当前 SPE/BL2 的 512 KB / 1 MB、`OVERWRITE_ONLY` 对齐；可生成/解析 PKCS#10 CSR，并可自行签发 X.509 证书。**PS 64 KB**，S 主槽 **`0x0C044000`**。密钥仍为 **EC-P256**（`master` 仍是 RSA-3072）。
 
 - 增加 windows-tfm-tools 该工具是windows系统的使用的回归脚本和烧录工具。
 

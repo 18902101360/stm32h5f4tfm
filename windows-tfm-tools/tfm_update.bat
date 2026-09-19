@@ -6,7 +6,7 @@ rem  * 1) Run regression.bat (option bytes + erase + OEM-iRoT)
 rem  * 2) If present in current dir (or this script's dir), download:
 rem  *      bl2.hex                 Intel HEX, address inside the file
 rem  *                              (BL2 bin at 0x0C00E000 / hex often 0x0800E000)
-rem  *      tfm_s_signed.hex/.bin   S 512 KB @ 0x0C038000 (preferred)
+rem  *      tfm_s_signed.hex/.bin   S 512 KB @ 0x0C044000 (preferred)
 rem  *      tfm_ns_signed.bin       NS 1 MB  @ 0x0C100000 (Bank2)
 rem  *      tfm_s_ns_signed.hex     fallback only: S+NS concatenated with no
 rem  *                              Bank1 gap, so NS lands at the wrong offset.
@@ -27,7 +27,7 @@ if not "%~1"=="" set "SN_ARG=%~1"
 
 rem H573 flash map (secure alias 0x0C00_0000)
 set "ADDR_BL2=0x0C00E000"
-set "ADDR_S=0x0C038000"
+set "ADDR_S=0x0C044000"
 set "ADDR_NS=0x0C100000"
 
 echo.

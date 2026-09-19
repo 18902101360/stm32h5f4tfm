@@ -115,7 +115,7 @@ else
     VERSION="${MCUBOOT_IMAGE_VERSION_S}"
     SEC_CNT="${MCUBOOT_SECURITY_COUNTER_S}"
     DEP="(1, ${MCUBOOT_NS_IMAGE_MIN_VER})"
-    SLOT_HINT="S   512KB @ 0x0C038000"
+    SLOT_HINT="S   512KB @ 0x0C044000"
 fi
 
 for f in "$LAYOUT" "$KEY" "$KIT/scripts/wrapper.py" "$KIT/bl2/macro_parser.py"; do

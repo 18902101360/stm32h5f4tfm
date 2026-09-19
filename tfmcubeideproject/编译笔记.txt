@@ -4,7 +4,7 @@ tfmcubeideproject 编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e）
 本分支基于 stm32H573P256-SPIFLASH-bl2-public-key：已展开并删除 tfmcubeideproject.7z，
 NS 应用含 Mbed TLS 4.1.1（PSA 客户端，源码在 STM32CubeIDE/ns_app/mbedtls-4.1.1），
 可生成/解析 PKCS#10 CSR，并可自行签发 X.509 证书。
-签名 EC-P256，NS 执行槽 1 MB @ 0x0C100000。完整说明见仓库根目录 readme.md、tfm编译笔记.txt 与 STM32CubeIDE/README.md。
+签名 EC-P256，NS 执行槽 1 MB @ 0x0C100000，PS 64 KB，S 主槽 0x0C044000。完整说明见仓库根目录 readme.md、tfm编译笔记.txt 与 STM32CubeIDE/README.md。
 
 从旧工程迁过来：把本分支 SPE 导出整份覆盖过去就行，
 .cproject、应用代码、链接脚本模板都不用改。
@@ -18,7 +18,7 @@ NS 应用含 Mbed TLS 4.1.1（PSA 客户端，源码在 STM32CubeIDE/ns_app/mbed
 	spe/out/appli_ns.pp.ld 的 FLASH ORIGIN	0x08100400
 	签完的 NS 大小、烧录地址	1 MB，0x0C100000（旧值 0x0C088000 是错的）
 	spe/api_ns/interface/lib/s_veneers.o	必须和板上 tfm_s 同一轮 SPE
-	TFM_UPDATE.sh / TFM_BIN2HEX.sh		slot0=0xc038000，slot1=0xc100000
+	TFM_UPDATE.sh / TFM_BIN2HEX.sh		slot0=0xc044000，slot1=0xc100000
 
 	只换 NS、不换同一轮 s_veneers.o，NSC 会跑飞。
 
@@ -43,7 +43,7 @@ NS 应用含 Mbed TLS 4.1.1（PSA 客户端，源码在 STM32CubeIDE/ns_app/mbed
 	layout/signing_layout_ns.o 决定 --pad 后槽大小，必须是 1 MB。
 
 4.烧录
-	BL2 + S 仍烧 SPE 产物（0x0C00E000 / 0x0C038000）。
+	BL2 + S 仍烧 SPE 产物（0x0C00E000 / 0x0C044000）。
 	NS 烧本工程签完的 bin 到 0x0C100000。
 	Linux：TFM_NS_BIN=指向本工程 tfm_ns_signed.bin ./flash_stm32h573.sh download
 	Windows：拷进 windows-tfm-tools 后双击 tfm_update.bat，或只烧 NS。

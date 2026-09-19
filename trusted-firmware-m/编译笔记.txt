@@ -26,12 +26,12 @@ trusted-firmware-m 编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e；S
 	ninja -C build_s install -j$(nproc)
 
 3.产物
-	build_s/bin/bl2.hex、tfm_s_signed.bin（512 KB，烧 0x0C038000）
+	build_s/bin/bl2.hex、tfm_s_signed.bin（512 KB，烧 0x0C044000）
 	build_s/api_ns/          整份覆盖到 makefile / CubeIDE
 	build_ns/ 由 tf-m-tests 侧 cmake 生成，见 ../tf-m-tests/编译笔记.txt
 
 4.本分支布局（源码：include/flash_layout.h）
-	S 执行  内部 Bank1 0x0C038000，512 KB
+	S 执行  内部 Bank1 0x0C044000，512 KB（PS 64 KB）
 	NS 执行 内部 Bank2 0x0C100000 / 0x08100000，1 MB
 	S 下载  W25Q32 0x100000，512 KB（命令偏移，非 XIP）
 	NS 下载 W25Q32 0x180000，1 MB

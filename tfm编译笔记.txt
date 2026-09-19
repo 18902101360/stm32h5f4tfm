@@ -1,5 +1,5 @@
 本仓库编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e）
-布局 / 密钥 / 烧录与 stm32H573P256-SPIFLASH-bl2-public-key 相同。本分支 CubeIDE NS 含 Mbed TLS 4.1.1，可解析 CSR、自行签发证书。
+布局继承自 stm32H573P256-SPIFLASH-bl2-public-key，本分支 PS 扩到 64 KB、S 主槽 0x0C044000。CubeIDE NS 含 Mbed TLS 4.1.1，可解析 CSR、自行签发证书。
 平台：STM32H573 + TrustZone + MCUboot（MCUBOOT_IMAGE_NUMBER=2，签名 EC-P256）
 推荐环境：Ubuntu 22.04，ARM GNU Toolchain 14.3.1
 
@@ -14,9 +14,11 @@
 升级策略 OVERWRITE_ONLY。下载槽在 SPI1 外接 W25Q32（4 MB，非 XIP），引脚 SCK=PA5 MISO=PA6 MOSI=PA7 CS=PB2。
 
 	内容		位置
-	S 执行		内部 Bank1 0x0C038000，512 KB
+	S 执行		内部 Bank1 0x0C044000，512 KB（本分支 PS 64 KB，相对父分支后移 48 KB）
 	NS 执行		内部 Bank2 0x0C100000 / 0x08100000，1 MB
-	Bank1 空隙	0x0C0B8000–0x0C0FFFFF（288 KB，SECWM1 保持 Secure）
+	PS		内部 0x0C030000，64 KB
+	ITS		内部 0x0C040000，16 KB
+	Bank1 空隙	0x0C0C4000–0x0C0FFFFF（240 KB，SECWM1 保持 Secure）
 	S 下载		W25Q32 命令偏移 0x100000，512 KB（不是片上 Bank2）
 	NS 下载		W25Q32 命令偏移 0x180000，1 MB
 
@@ -111,7 +113,7 @@ SPI 0x100000 ≠ CPU NS 执行地址 0x0C100000。
 
 	地址（安全别名）：
 	BL2    0x0C00E000（bl2.hex 另含 0x0C028000 OTP）
-	S      0x0C038000
+	S      0x0C044000
 	NS     0x0C100000
 	BOOT_UBE=0xB4（OEM-iRoT），串口 115200。
 	NS 可用环境变量 TFM_NS_BIN= 指定其它已签名镜像（makefile / CubeIDE 产物）。
@@ -141,7 +143,7 @@ SPI 0x100000 ≠ CPU NS 执行地址 0x0C100000。
 	TFM_UPDATE.sh		必须在 postbuild 成功之后再跑；只烧内部 primary
 	pip install -e .	由 ./buildtfm.sh 完成；手工编 S 前根目录 .venv 要有
 	regression.sh		会擦 Flash、改 OB，不要每次烧录都跑
-	TFM_UPDATE.sh slot	slot0=0xc038000，slot1=0xc100000
+	TFM_UPDATE.sh slot	slot0=0xc044000，slot1=0xc100000
 	s_veneers.o			必须和板上 tfm_s 同一轮 SPE，只换 NS 会 NSC 跑飞
 
 9.覆盖 NS 工程用的 api_ns
@@ -154,7 +156,7 @@ SPI 0x100000 ≠ CPU NS 执行地址 0x0C100000。
 	appli_ns.pp.ld ORIGIN	0x08100400
 	签完的 NS 大小、烧录地址	1 MB，0x0C100000（旧值 0x0C088000 是错的）
 	s_veneers.o				与板上 tfm_s 同一轮 SPE
-	TFM_UPDATE.sh			slot0=0xc038000，slot1=0xc100000
+	TFM_UPDATE.sh			slot0=0xc044000，slot1=0xc100000
 
 10.外部 W25Q32 升级（不是 CubeProgrammer 烧下载槽）
 	NS 用 w25q32_init / erase_4k / write 把已签名镜像写到 NOR（先擦后写）：
