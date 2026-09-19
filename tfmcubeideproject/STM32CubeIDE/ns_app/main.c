@@ -34,6 +34,8 @@
 
 #include "mbedtls/ssl.h"
 #include "mbedtls/x509_crt.h"
+#include "mbedtls/x509_csr.h"
+#include "mbedtls/pk.h"
 #include "mbedtls/version.h"
 
 static int g_fail;
@@ -159,6 +161,90 @@ static void test_tls_config(void)
     mbedtls_ssl_config_free(&conf);
 }
 
+static void check_mbed(const char *what, int ret)
+{
+    if (ret == 0) {
+        LOG_MSG("  [PASS] %s\r\n", what);
+    } else {
+        LOG_MSG("  [FAIL] %s ret=%d\r\n", what, ret);
+        g_fail++;
+    }
+}
+
+/*
+ * Generate a PKCS#10 CSR in the SPE: P-256 key stays in Crypto (psa_generate_key
+ * + mbedtls_pk_wrap_psa). Writes DER and PEM into RAM only.
+ */
+static void test_csr(void)
+{
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_pk_context pk;
+    mbedtls_x509write_csr csr;
+    static unsigned char der[512];
+    static unsigned char pem[768];
+    psa_status_t status;
+    int ret;
+    int der_len;
+
+    LOG_MSG("Mbed TLS CSR write\r\n");
+
+    mbedtls_pk_init(&pk);
+    mbedtls_x509write_csr_init(&csr);
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
+    psa_set_key_algorithm(&attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
+    psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    psa_set_key_bits(&attr, 256);
+
+    status = psa_generate_key(&attr, &key_id);
+    psa_reset_key_attributes(&attr);
+    check("psa_generate_key(P-256)", status);
+    if (status != PSA_SUCCESS) {
+        mbedtls_x509write_csr_free(&csr);
+        mbedtls_pk_free(&pk);
+        return;
+    }
+
+    ret = mbedtls_pk_wrap_psa(&pk, key_id);
+    check_mbed("mbedtls_pk_wrap_psa", ret);
+    if (ret != 0) {
+        goto cleanup;
+    }
+
+    mbedtls_x509write_csr_set_md_alg(&csr, MBEDTLS_MD_SHA256);
+    mbedtls_x509write_csr_set_key(&csr, &pk);
+    ret = mbedtls_x509write_csr_set_subject_name(&csr, "CN=stm32h573-ns,O=tfm");
+    check_mbed("mbedtls_x509write_csr_set_subject_name", ret);
+    if (ret != 0) {
+        goto cleanup;
+    }
+
+    der_len = mbedtls_x509write_csr_der(&csr, der, sizeof(der));
+    if (der_len > 0) {
+        LOG_MSG("  [PASS] mbedtls_x509write_csr_der len=%d\r\n", der_len);
+        LOG_MSG("  der=");
+        log_hex(der + sizeof(der) - der_len, (size_t)der_len);
+        LOG_MSG("\r\n");
+    } else {
+        LOG_MSG("  [FAIL] mbedtls_x509write_csr_der ret=%d\r\n", der_len);
+        g_fail++;
+        goto cleanup;
+    }
+
+    memset(pem, 0, sizeof(pem));
+    ret = mbedtls_x509write_csr_pem(&csr, pem, sizeof(pem));
+    check_mbed("mbedtls_x509write_csr_pem", ret);
+    if (ret == 0) {
+        LOG_MSG("  pem_len=%u\r\n", (unsigned)strlen((const char *)pem));
+    }
+
+cleanup:
+    mbedtls_x509write_csr_free(&csr);
+    mbedtls_pk_free(&pk);
+    (void)psa_destroy_key(key_id);
+}
+
 static void test_fwu_query(void)
 {
     psa_fwu_component_info_t info;
@@ -207,6 +293,7 @@ int main(void)
 
     test_crypto();
     test_tls_config();
+    test_csr();
     test_its();
     test_fwu_query();
 

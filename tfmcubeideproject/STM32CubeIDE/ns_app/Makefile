@@ -86,7 +86,7 @@ APP_SRCS := \
 MBEDTLS_LIB_EXCLUDE := \
 	net_sockets.c mbedtls_config.c timing.c pkcs7.c \
 	ssl_tls12_server.c ssl_tls13_server.c ssl_cookie.c \
-	x509write.c x509write_crt.c x509write_csr.c x509_create.c x509_csr.c
+	x509write_crt.c x509_csr.c
 
 MBEDTLS_LIB_SRCS := $(filter-out \
 	$(addprefix $(MBEDTLS)/library/,$(MBEDTLS_LIB_EXCLUDE)), \
@@ -107,6 +107,8 @@ CRYPTO_SUPPORT_SRCS := \
 	$(MBEDTLS)/tf-psa-crypto/extras/pk_ecc.c \
 	$(MBEDTLS)/tf-psa-crypto/extras/pk_rsa.c \
 	$(MBEDTLS)/tf-psa-crypto/extras/pk_wrap.c \
+	$(MBEDTLS)/tf-psa-crypto/extras/pkwrite.c \
+	$(MBEDTLS)/tf-psa-crypto/core/psa_util.c \
 	$(MBEDTLS)/tf-psa-crypto/drivers/builtin/src/psa_util_internal.c
 
 APP_OBJS  := $(patsubst $(ROOT)/%.c,$(OUT)/obj/%.o,$(APP_SRCS))
