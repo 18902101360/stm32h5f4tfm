@@ -1,4 +1,4 @@
-tfmmakeproject 编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e；布局同 stm32H573P256-SPIFLASH-bl2-public-key）
+tfmmakeproject 编译笔记（分支 stm32H573P256-SPIFLASH-bl2-public-key-mbedtls；布局同 stm32H573P256-SPIFLASH-bl2-public-key）
 
 本目录是 makefile 裸机 NS 工程：内部晶振 PLL 240 MHz，硬件浮点 FPv5-SP-D16，
 正式用法关闭 NS 测试套件。签名 EC-P256，升级策略 overwrite-only。

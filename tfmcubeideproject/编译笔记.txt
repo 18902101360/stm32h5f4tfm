@@ -1,4 +1,4 @@
-tfmcubeideproject 编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e）
+tfmcubeideproject 编译笔记（分支 stm32H573P256-SPIFLASH-bl2-public-key-mbedtls）
 
 本目录是 STM32CubeIDE 非安全工程（工程名 tfmminiproject），由 makefile 工程移植。
 本分支基于 stm32H573P256-SPIFLASH-bl2-public-key：已展开并删除 tfmcubeideproject.7z，

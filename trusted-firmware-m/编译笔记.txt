@@ -1,4 +1,4 @@
-trusted-firmware-m 编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e；SPE/BL2 与 stm32H573P256-SPIFLASH-bl2-public-key 相同）
+trusted-firmware-m 编译笔记（分支 stm32H573P256-SPIFLASH-bl2-public-key-mbedtls；SPE/BL2 与 stm32H573P256-SPIFLASH-bl2-public-key 相同）
 
 本目录是 TF-M SPE / BL2 源码树，平台 stm/stm32h573i_dk，签名 EC-P256。
 不要在本目录单独 git clone 上游 TF-M；与仓库根目录的 tf-m-tests 配套使用。

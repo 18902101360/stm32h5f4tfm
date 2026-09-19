@@ -2,7 +2,7 @@
 
 工程名：`tfmminiproject`。目录：`tfmcubeideproject/STM32CubeIDE/`。
 
-所在分支：`cursor/cubeide-mbedtls-from-7z-a11e`（基于 `stm32H573P256-SPIFLASH-bl2-public-key`）。仓库总览见根目录 [`readme.md`](../../readme.md)。
+所在分支：`stm32H573P256-SPIFLASH-bl2-public-key-mbedtls`（基于 `stm32H573P256-SPIFLASH-bl2-public-key`）。仓库总览见根目录 [`readme.md`](../../readme.md)。
 
 相对父分支：展开并删除根目录 `tfmcubeideproject.7z`；用当前 SPE/`sign_kit` 覆盖 7z 里旧的 320/576 KB、SWAP 布局；NS 编入 Mbed TLS 4.1.1；打开 CSR 解析与自行签发证书；**PS 64 KB**，S 主槽 **`0x0C044000`**。
 
