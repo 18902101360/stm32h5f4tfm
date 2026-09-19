@@ -22,13 +22,13 @@ NS 侧跑 TLS 1.2 / TLS 1.3 握手状态机和 X.509 解析。AES / SHA / 随机
 
 头文件顺序必须是 **Mbed TLS 4.1.1 在前，`api_ns` 在后**，否则会用到 SPE 旧的 `mbedtls/pk.h`。
 
-CSR：`ns_crypto_user.h` 打开 `MBEDTLS_PK_WRITE_C` / `MBEDTLS_PEM_WRITE_C`；Makefile 编 `x509_create.c`、`x509write.c`、`x509write_csr.c`、`pkwrite.c`、`psa_util.c`（ECDSA raw↔DER）。`main.c` 的 `test_csr()` 用 SPE 里的 P-256 密钥（`mbedtls_pk_wrap_psa`）写出 PKCS#10 DER/PEM。仍不编证书签发（`x509write_crt.c`）和 CSR 解析（`x509_csr.c`）。
+CSR / CRT：`ns_crypto_user.h` 打开 `MBEDTLS_PK_WRITE_C` / `MBEDTLS_PEM_WRITE_C`。编入 `x509_create.c`、`x509write.c`、`x509write_csr.c`、`x509_csr.c`（解析 CSR）、`x509write_crt.c`（签发证书）、`pkwrite.c`、`psa_util.c`。`test_csr()`：SPE 生成 P-256 → 写 PKCS#10 → 解析 CSR → 用第二把 CA 密钥签发 CRT，再解析该 CRT。
 
 ### 不要编译
 
 - `tf-psa-crypto/core/psa_crypto*.c`
 - `drivers/builtin/src` 里的 `aes.c` / `sha*.c` / `ecp.c` / `gcm.c` / `rsa.c` / `cipher.c` 等（只保留 `psa_util_internal.c`）
-- `library/net_sockets.c`、`timing.c`、server / DTLS / `x509write_crt.c` / `x509_csr.c`
+- `library/net_sockets.c`、`timing.c`、server / DTLS
 
 Makefile 已按上面裁源；CubeIDE `.cproject` 的 `sourceEntries` 排除项也对照过。命令行请用 Makefile。
 
@@ -57,7 +57,7 @@ cd tfmcubeideproject/STM32CubeIDE/sign_kit
 
 ## 板上测试
 
-当前 `main.c` 的 `test_tls_config()` 只做 `mbedtls_ssl_config_defaults` + min TLS1.2 / max TLS1.3 + `mbedtls_ssl_setup`，**没有 TCP/BIO，不会真正握手**。`test_csr()` 会在 SPE 里生成 P-256 密钥并写出 PKCS#10 CSR（DER + PEM）。
+当前 `main.c` 的 `test_tls_config()` 只做 `mbedtls_ssl_config_defaults` + min TLS1.2 / max TLS1.3 + `mbedtls_ssl_setup`，**没有 TCP/BIO，不会真正握手**。`test_csr()` 会生成 CSR、解析 CSR，并用 SPE 里的 CA 密钥签发一张 CRT。
 
 烧录（与本分支 SPE/BL2 配套，内部 Flash）：
 

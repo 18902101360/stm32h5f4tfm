@@ -172,77 +172,157 @@ static void check_mbed(const char *what, int ret)
 }
 
 /*
- * Generate a PKCS#10 CSR in the SPE: P-256 key stays in Crypto (psa_generate_key
- * + mbedtls_pk_wrap_psa). Writes DER and PEM into RAM only.
+ * PKCS#10 write + parse, then issue a CRT with a SPE-resident CA key.
+ * Leaf/CA private keys stay in Crypto (mbedtls_pk_wrap_psa).
  */
 static void test_csr(void)
 {
     psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    mbedtls_pk_context pk;
+    mbedtls_svc_key_id_t leaf_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t ca_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_pk_context leaf_pk;
+    mbedtls_pk_context ca_pk;
     mbedtls_x509write_csr csr;
-    static unsigned char der[512];
-    static unsigned char pem[768];
+    mbedtls_x509_csr parsed;
+    mbedtls_x509write_cert crt;
+    mbedtls_x509_crt parsed_crt;
+    static unsigned char csr_der[512];
+    static unsigned char csr_pem[768];
+    static unsigned char crt_der[1024];
+    static unsigned char crt_pem[1536];
+    static const unsigned char serial[] = { 0x01 };
+    char subject[128];
+    const unsigned char *csr_der_p;
     psa_status_t status;
     int ret;
-    int der_len;
+    int csr_der_len;
+    int crt_der_len;
 
-    LOG_MSG("Mbed TLS CSR write\r\n");
+    LOG_MSG("Mbed TLS CSR parse / CRT write\r\n");
 
-    mbedtls_pk_init(&pk);
+    mbedtls_pk_init(&leaf_pk);
+    mbedtls_pk_init(&ca_pk);
     mbedtls_x509write_csr_init(&csr);
+    mbedtls_x509_csr_init(&parsed);
+    mbedtls_x509write_crt_init(&crt);
+    mbedtls_x509_crt_init(&parsed_crt);
 
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
     psa_set_key_algorithm(&attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
     psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
     psa_set_key_bits(&attr, 256);
 
-    status = psa_generate_key(&attr, &key_id);
-    psa_reset_key_attributes(&attr);
-    check("psa_generate_key(P-256)", status);
+    status = psa_generate_key(&attr, &leaf_id);
+    check("psa_generate_key(leaf P-256)", status);
     if (status != PSA_SUCCESS) {
-        mbedtls_x509write_csr_free(&csr);
-        mbedtls_pk_free(&pk);
-        return;
+        goto cleanup;
     }
 
-    ret = mbedtls_pk_wrap_psa(&pk, key_id);
-    check_mbed("mbedtls_pk_wrap_psa", ret);
+    ret = mbedtls_pk_wrap_psa(&leaf_pk, leaf_id);
+    check_mbed("mbedtls_pk_wrap_psa(leaf)", ret);
     if (ret != 0) {
         goto cleanup;
     }
 
     mbedtls_x509write_csr_set_md_alg(&csr, MBEDTLS_MD_SHA256);
-    mbedtls_x509write_csr_set_key(&csr, &pk);
+    mbedtls_x509write_csr_set_key(&csr, &leaf_pk);
     ret = mbedtls_x509write_csr_set_subject_name(&csr, "CN=stm32h573-ns,O=tfm");
     check_mbed("mbedtls_x509write_csr_set_subject_name", ret);
     if (ret != 0) {
         goto cleanup;
     }
 
-    der_len = mbedtls_x509write_csr_der(&csr, der, sizeof(der));
-    if (der_len > 0) {
-        LOG_MSG("  [PASS] mbedtls_x509write_csr_der len=%d\r\n", der_len);
-        LOG_MSG("  der=");
-        log_hex(der + sizeof(der) - der_len, (size_t)der_len);
-        LOG_MSG("\r\n");
+    csr_der_len = mbedtls_x509write_csr_der(&csr, csr_der, sizeof(csr_der));
+    if (csr_der_len > 0) {
+        LOG_MSG("  [PASS] mbedtls_x509write_csr_der len=%d\r\n", csr_der_len);
+        csr_der_p = csr_der + sizeof(csr_der) - csr_der_len;
     } else {
-        LOG_MSG("  [FAIL] mbedtls_x509write_csr_der ret=%d\r\n", der_len);
+        LOG_MSG("  [FAIL] mbedtls_x509write_csr_der ret=%d\r\n", csr_der_len);
         g_fail++;
         goto cleanup;
     }
 
-    memset(pem, 0, sizeof(pem));
-    ret = mbedtls_x509write_csr_pem(&csr, pem, sizeof(pem));
+    memset(csr_pem, 0, sizeof(csr_pem));
+    ret = mbedtls_x509write_csr_pem(&csr, csr_pem, sizeof(csr_pem));
     check_mbed("mbedtls_x509write_csr_pem", ret);
-    if (ret == 0) {
-        LOG_MSG("  pem_len=%u\r\n", (unsigned)strlen((const char *)pem));
+
+    ret = mbedtls_x509_csr_parse_der(&parsed, csr_der_p, (size_t)csr_der_len);
+    check_mbed("mbedtls_x509_csr_parse_der", ret);
+    if (ret != 0) {
+        goto cleanup;
     }
 
-cleanup:
+    ret = mbedtls_x509_dn_gets(subject, sizeof(subject), &parsed.subject);
+    if (ret >= 0) {
+        LOG_MSG("  [PASS] CSR subject\r\n");
+        LOG_MSG("  %s\r\n", subject);
+    } else {
+        check_mbed("mbedtls_x509_dn_gets", ret);
+        goto cleanup;
+    }
+
+    /* Leaf private key is no longer needed; subject public key is in parsed. */
     mbedtls_x509write_csr_free(&csr);
-    mbedtls_pk_free(&pk);
-    (void)psa_destroy_key(key_id);
+    mbedtls_x509write_csr_init(&csr);
+    mbedtls_pk_free(&leaf_pk);
+    mbedtls_pk_init(&leaf_pk);
+    (void)psa_destroy_key(leaf_id);
+    leaf_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    status = psa_generate_key(&attr, &ca_id);
+    check("psa_generate_key(CA P-256)", status);
+    if (status != PSA_SUCCESS) {
+        goto cleanup;
+    }
+
+    ret = mbedtls_pk_wrap_psa(&ca_pk, ca_id);
+    check_mbed("mbedtls_pk_wrap_psa(CA)", ret);
+    if (ret != 0) {
+        goto cleanup;
+    }
+
+    mbedtls_x509write_crt_set_md_alg(&crt, MBEDTLS_MD_SHA256);
+    mbedtls_x509write_crt_set_subject_key(&crt, &parsed.pk);
+    mbedtls_x509write_crt_set_issuer_key(&crt, &ca_pk);
+    ret = mbedtls_x509write_crt_set_serial_raw(&crt, serial, sizeof(serial));
+    check_mbed("mbedtls_x509write_crt_set_serial_raw", ret);
+    ret = mbedtls_x509write_crt_set_validity(&crt, "20260101000000", "20361231235959");
+    check_mbed("mbedtls_x509write_crt_set_validity", ret);
+    ret = mbedtls_x509write_crt_set_issuer_name(&crt, "CN=stm32h573-ca,O=tfm");
+    check_mbed("mbedtls_x509write_crt_set_issuer_name", ret);
+    ret = mbedtls_x509write_crt_set_subject_name(&crt, "CN=stm32h573-ns,O=tfm");
+    check_mbed("mbedtls_x509write_crt_set_subject_name", ret);
+    ret = mbedtls_x509write_crt_set_basic_constraints(&crt, 0, -1);
+    check_mbed("mbedtls_x509write_crt_set_basic_constraints", ret);
+
+    crt_der_len = mbedtls_x509write_crt_der(&crt, crt_der, sizeof(crt_der));
+    if (crt_der_len > 0) {
+        LOG_MSG("  [PASS] mbedtls_x509write_crt_der len=%d\r\n", crt_der_len);
+    } else {
+        LOG_MSG("  [FAIL] mbedtls_x509write_crt_der ret=%d\r\n", crt_der_len);
+        g_fail++;
+        goto cleanup;
+    }
+
+    memset(crt_pem, 0, sizeof(crt_pem));
+    ret = mbedtls_x509write_crt_pem(&crt, crt_pem, sizeof(crt_pem));
+    check_mbed("mbedtls_x509write_crt_pem", ret);
+
+    ret = mbedtls_x509_crt_parse_der(&parsed_crt,
+                                     crt_der + sizeof(crt_der) - crt_der_len,
+                                     (size_t)crt_der_len);
+    check_mbed("mbedtls_x509_crt_parse_der", ret);
+
+cleanup:
+    psa_reset_key_attributes(&attr);
+    mbedtls_x509write_csr_free(&csr);
+    mbedtls_x509write_crt_free(&crt);
+    mbedtls_x509_csr_free(&parsed);
+    mbedtls_x509_crt_free(&parsed_crt);
+    mbedtls_pk_free(&leaf_pk);
+    mbedtls_pk_free(&ca_pk);
+    (void)psa_destroy_key(leaf_id);
+    (void)psa_destroy_key(ca_id);
 }
 
 static void test_fwu_query(void)

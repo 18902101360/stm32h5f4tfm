@@ -85,8 +85,7 @@ APP_SRCS := \
 
 MBEDTLS_LIB_EXCLUDE := \
 	net_sockets.c mbedtls_config.c timing.c pkcs7.c \
-	ssl_tls12_server.c ssl_tls13_server.c ssl_cookie.c \
-	x509write_crt.c x509_csr.c
+	ssl_tls12_server.c ssl_tls13_server.c ssl_cookie.c
 
 MBEDTLS_LIB_SRCS := $(filter-out \
 	$(addprefix $(MBEDTLS)/library/,$(MBEDTLS_LIB_EXCLUDE)), \
