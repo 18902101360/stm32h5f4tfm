@@ -18,9 +18,9 @@ FLASH_S_END = FLASH_S_BASE + FLASH_BYTES
 REQUIRED_SLOTS = {
     "boot": "0xc00e000",
     "slot0": "0xc078000",
-    "slot1": "0xc0d0000",
+    "slot1": "0xc0f8000",
     "slot2": "0xc200000",
-    "slot3": "0xc258000",
+    "slot3": "0xc280000",
 }
 
 
@@ -317,8 +317,8 @@ def cmd_self_test():
         assert err is None, err
     script_dir = os.path.dirname(os.path.abspath(__file__))
     env = open(os.path.join(script_dir, "h5f4_env.bat"), encoding="utf-8").read()
-    assert 'set "H5F4_ADDR_NS_S=0x0C0D0000"' in env
-    assert 'set "H5F4_ADDR_NS_NS=0x080D0000"' in env
+    assert 'set "H5F4_ADDR_NS_S=0x0C0F8000"' in env
+    assert 'set "H5F4_ADDR_NS_NS=0x080F8000"' in env
     assert "WRPSG11=0xffffffff" in env
     assert 'set "H5F4_SECWM_FULL=SECWM1_STRT=0 SECWM1_END=255' in env
     assert "WRPSGn1=" not in env

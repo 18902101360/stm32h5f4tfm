@@ -7,7 +7,7 @@ rem    1) erase_flash.bat      mass-erase user flash
 rem    2) regression.bat       option bytes (WRPSG11, SECWM, BOOT_UBE)
 rem    3) find .bin in cwd / this folder, else build_s and build_ns here
 rem       if no .bin, convert matching .hex to .bin
-rem    4) download BL2/S/NS to 0x0C00E000 / 0x0C078000 / 0x0C0D0000
+rem    4) download BL2/S/NS to 0x0C00E000 / 0x0C078000 / 0x0C0F8000
 rem
 rem  Usage:
 rem    tfm_update.bat                 erase + option bytes + download

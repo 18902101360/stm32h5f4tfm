@@ -18,7 +18,7 @@ Windows 的 sign.bat 必须是 CRLF；若 post-build 报 1KIT:~0,-1 或 et 不�
 
 s_veneers.o 必须和板上的 SPE 一起重新导出（trusted-firmware-m/build_s/api_ns/interface/lib）。换过 SPE 后请拷新的 s_veneers.o 和 sign_kit/layout/signing_layout_*.o。
 
-NS 槽 1200 KB @ 0x0C0D0000（升级 0x0C258000）；S 槽 352 KB @ 0x0C078000（升级 0x0C200000）。USART6 PC6/PC7，115200。
+NS 槽 1024 KB @ 0x0C0F8000（升级 0x0C280000）；S 槽 512 KB @ 0x0C078000（升级 0x0C200000）。USART6 PC6/PC7，115200。
 
 工程已带 mbedtls 4.1.1（ns_app/mbedtls-4.1.1）：编 TLS/X.509 辅助模块，不编第二套 PSA crypto core。
 密码仍走 SPE 的 PSA（s_veneers.o）。配置见 ns_app/ns_crypto_user.h、ns_mbedtls_user.h。

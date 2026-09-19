@@ -110,14 +110,14 @@ if [[ "$KIND" == "ns" ]]; then
     VERSION="${MCUBOOT_IMAGE_VERSION_NS}"
     SEC_CNT="${MCUBOOT_SECURITY_COUNTER_NS}"
     DEP="(0, ${MCUBOOT_S_IMAGE_MIN_VER})"
-    SLOT_HINT="NS  1200KB @ 0x0C0D0000"
+    SLOT_HINT="NS  1024KB @ 0x0C0F8000"
 else
     LAYOUT="$KIT/layout/signing_layout_s.o"
     KEY="$KIT/keys/image_s_signing_private_key.pem"
     VERSION="${MCUBOOT_IMAGE_VERSION_S}"
     SEC_CNT="${MCUBOOT_SECURITY_COUNTER_S}"
     DEP="(1, ${MCUBOOT_NS_IMAGE_MIN_VER})"
-    SLOT_HINT="S   352KB @ 0x0C078000"
+    SLOT_HINT="S   512KB @ 0x0C078000"
 fi
 
 for f in "$LAYOUT" "$KEY" "$KIT/scripts/wrapper.py" "$KIT/bl2/macro_parser.py"; do
