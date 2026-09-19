@@ -21,6 +21,7 @@
 3. NS 侧编入 Mbed TLS 4.1.1（PSA 客户端：密码学走 SPE `psa_*` + `s_veneers.o`）。
 4. 打开 PKCS#10 **CSR 生成 / 解析** 和 **自行签发 X.509 证书**（见下一节）。
 5. **Protected Storage 从 16 KB 扩到 64 KB**（8 个 8 KB 扇区）。ITS 仍 16 KB，因此 S 主槽起点从 `0x0C038000` 挪到 **`0x0C044000`**（仍 512 KB）；Bank1 空隙变为 `0x0C0C4000–0x0C0FFFFF`（240 KB）。NS 仍整块 Bank2。改完必须 **回归并重烧 BL2 + S + NS**；旧 PS 文件系统不能沿用。
+6. **ITS / PS 对象上限**（`config_tfm_target.h`）：`ITS_MAX_ASSET_SIZE=512`，`ITS_NUM_ASSETS=12`；`PS_MAX_ASSET_SIZE=2048`，`PS_NUM_ASSETS=24`。ITS 12 个满额对象能同时放下。PS 24 是槽位数；加密后单对象约 2.1 KB，64 KB 里大约 **22 个满 2 KB 对象**能同时存在（其余槽给更小的资产）。
 
 CubeIDE 工程说明：[`tfmcubeideproject/STM32CubeIDE/README.md`](./tfmcubeideproject/STM32CubeIDE/README.md)。
 

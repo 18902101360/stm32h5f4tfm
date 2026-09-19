@@ -36,4 +36,15 @@
 #undef CRYPTO_ENGINE_BUF_SIZE
 #define CRYPTO_ENGINE_BUF_SIZE                 0x8000
 
+/*
+ * Storage objects vs flash:
+ * ITS 16 KB, 2×8 KB blocks (metadata+data share a block). 12 × 512 B all fit.
+ * PS 64 KB, 8×8 KB blocks. PS_ENCRYPTION on; a 2048 B asset is ~2.1 KB on flash.
+ * 24 slots pass FS checks; ~22 full-size assets can coexist (table + header).
+ */
+#define ITS_MAX_ASSET_SIZE                     512
+#define ITS_NUM_ASSETS                         12
+#define PS_MAX_ASSET_SIZE                      2048
+#define PS_NUM_ASSETS                          24
+
 #endif /* __CONFIG_TFM_TARGET_H__ */

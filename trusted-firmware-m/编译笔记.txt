@@ -32,6 +32,7 @@ trusted-firmware-m 编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e；S
 
 4.本分支布局（源码：include/flash_layout.h）
 	S 执行  内部 Bank1 0x0C044000，512 KB（PS 64 KB）
+	ITS 对象  512 B × 12；PS 对象  2048 B × 24（满 2 KB 大约同时 22 个）
 	NS 执行 内部 Bank2 0x0C100000 / 0x08100000，1 MB
 	S 下载  W25Q32 0x100000，512 KB（命令偏移，非 XIP）
 	NS 下载 W25Q32 0x180000，1 MB
@@ -47,6 +48,8 @@ trusted-firmware-m 编译笔记（分支 cursor/cubeide-mbedtls-from-7z-a11e；S
 	平台覆盖：platform/ext/target/stm/stm32h573i_dk/config_tfm_target.h
 	CRYPTO_IOVEC_BUFFER_SIZE=20480  IPC 暂存（握手 psa_export_public_key）
 	CRYPTO_ENGINE_BUF_SIZE=0x8000   TF-PSA-Crypto 堆 mbedtls_mem_buf
+	ITS_MAX_ASSET_SIZE=512  ITS_NUM_ASSETS=12
+	PS_MAX_ASSET_SIZE=2048  PS_NUM_ASSETS=24
 	默认 12 KiB 堆只够「0 个 TLS 会话时做一次 RSA-4096 验签」。
 	一路 WSS 建好后会话密钥常驻该堆，第二路走 Let's Encrypt（Root YR /
 	ISRG Root X1 为 RSA-4096）时 psa_verify_hash() 返回 -141，NS mbedTLS
