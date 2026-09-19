@@ -4,7 +4,7 @@
 必须和当前板上的 H5F4 BL2 / SPE 配套（`H5F4BL2` / `H5F4SWP2`）。
 
 布局、密钥、imgtool 与本 makefile 工程 `api_ns` 导出一致：
-NS 槽 1200 KB @ `0x0C090000`，S 槽 352 KB @ `0x0C038000`，`BL2_TRAILER_SIZE=0x3000`。
+NS 槽 1200 KB @ `0x0C0D0000`，S 槽 352 KB @ `0x0C078000`，`BL2_TRAILER_SIZE=0x3000`。
 
 ## 用法
 
@@ -46,8 +46,8 @@ sign.bat sapp.bin
 
 | 镜像 | 地址 | 签完大小 |
 |---|---|---|
-| `*_s_signed.bin` | `0x0C038000` | 352 KB |
-| `*_ns_signed.bin` | `0x0C090000` | 1200 KB |
+| `*_s_signed.bin` | `0x0C078000` | 352 KB |
+| `*_ns_signed.bin` | `0x0C0D0000` | 1200 KB |
 
 签完把 `tfm_ns_signed.bin` 放到 `windows-tfm-tools`，双击 `tfm_update.bat`。
 Linux 也可用仓库根目录 `./flash_stm32h5f4.sh`。

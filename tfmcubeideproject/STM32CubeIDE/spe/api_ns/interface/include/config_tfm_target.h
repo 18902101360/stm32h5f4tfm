@@ -15,4 +15,10 @@
 /* Use external RNG to provide entropy */
 #define CRYPTO_EXT_RNG                         1
 
+/* ../ns_app/mbedtls-4.1.1/library/ssl_tls13_generic.c:1621 0x2005a788: psa_export_public_key() returned -141  */
+#define ITS_MAX_ASSET_SIZE                     512
+#define ITS_NUM_ASSETS                         16
+#define PS_MAX_ASSET_SIZE                      2048
+#define PS_NUM_ASSETS                          120
+
 #endif /* __CONFIG_TFM_TARGET_H__ */

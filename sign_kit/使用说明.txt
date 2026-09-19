@@ -38,8 +38,8 @@
        tfm_ns_signed.bin / sapp_signed.bin（或 <输入名>_signed.bin）
 
 五、烧录地址（STM32H5F4，与 windows-tfm-tools / flash 脚本一致）
-  S  主槽：0x0C038000   签完约 352 KB
-  NS 主槽：0x0C090000   签完约 1200 KB
+  S  主槽：0x0C078000   签完约 352 KB
+  NS 主槽：0x0C0D0000   签完约 1200 KB
   S  副槽（升级）：0x0C200000
   NS 副槽（升级）：0x0C258000
   不要使用 H573 的 0x0C088000 等地址。

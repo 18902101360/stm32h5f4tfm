@@ -17,8 +17,8 @@ FLASH_BYTES = 4 * 1024 * 1024
 FLASH_S_END = FLASH_S_BASE + FLASH_BYTES
 REQUIRED_SLOTS = {
     "boot": "0xc00e000",
-    "slot0": "0xc038000",
-    "slot1": "0xc090000",
+    "slot0": "0xc078000",
+    "slot1": "0xc0d0000",
     "slot2": "0xc200000",
     "slot3": "0xc258000",
 }
@@ -253,10 +253,10 @@ def cmd_self_test():
         (0x0C00E000, b"\x11"),
         (0x0C258000, b"\x22"),
         (0x0C3FFFF0, b"\x33"),
-        (0x08038000, b"\x44"),
+        (0x08078000, b"\x44"),
     ]
     mapped = [remap_secure_alias(a) for a, _ in recs]
-    assert mapped == [0x0800E000, 0x08258000, 0x083FFFF0, 0x08038000], mapped
+    assert mapped == [0x0800E000, 0x08258000, 0x083FFFF0, 0x08078000], mapped
     assert remap_secure_alias(0x0C400000) == 0x0C400000
 
     with tempfile.TemporaryDirectory() as td:
@@ -304,7 +304,7 @@ def cmd_self_test():
 
         upd = os.path.join(td, "TFM_UPDATE.sh")
         with open(upd, "w", encoding="ascii") as f:
-            f.write("slot0=0xc038000\nslot1=0xc088000\nslot2=0xc200000\n")
+            f.write("slot0=0xc078000\nslot1=0xc088000\nslot2=0xc200000\n")
             f.write("slot3=0xc258000\nboot=0xc00e000\n")
         err = update_sh_error(upd)
         assert err and "slot1" in err, err
@@ -317,8 +317,8 @@ def cmd_self_test():
         assert err is None, err
     script_dir = os.path.dirname(os.path.abspath(__file__))
     env = open(os.path.join(script_dir, "h5f4_env.bat"), encoding="utf-8").read()
-    assert 'set "H5F4_ADDR_NS_S=0x0C090000"' in env
-    assert 'set "H5F4_ADDR_NS_NS=0x08090000"' in env
+    assert 'set "H5F4_ADDR_NS_S=0x0C0D0000"' in env
+    assert 'set "H5F4_ADDR_NS_NS=0x080D0000"' in env
     assert "WRPSG11=0xffffffff" in env
     assert 'set "H5F4_SECWM_FULL=SECWM1_STRT=0 SECWM1_END=255' in env
     assert "WRPSGn1=" not in env

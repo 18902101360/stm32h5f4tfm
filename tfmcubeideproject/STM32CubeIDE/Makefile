@@ -86,9 +86,8 @@ TFM_SRCS := $(wildcard ns_app/tfm_src/*.c)
 
 # Same exclusions as STM32CubeIDE/.cproject sourceEntries.
 MBEDTLS_LIB_EXCL := mbedtls_config.c net_sockets.c pkcs7.c ssl_cookie.c \
-	ssl_tls12_server.c ssl_tls13_server.c timing.c x509_create.c x509_csr.c \
-	x509write.c x509write_crt.c x509write_csr.c
-MBEDTLS_EXTRAS_EXCL := lmots.c lms.c nist_kw.c pkwrite.c
+	ssl_tls12_server.c ssl_tls13_server.c timing.c
+MBEDTLS_EXTRAS_EXCL := lmots.c lms.c nist_kw.c
 MBEDTLS_PLATFORM_EXCL := threading.c
 MBEDTLS_UTIL_EXCL := pkcs5.c
 

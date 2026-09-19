@@ -117,8 +117,8 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="spe|sign_kit|ns_app/out|ns_app/mbedtls-4.1.1" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="mbedtls_config.c|net_sockets.c|pkcs7.c|ssl_cookie.c|ssl_tls12_server.c|ssl_tls13_server.c|timing.c|x509_create.c|x509_csr.c|x509write.c|x509write_crt.c|x509write_csr.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/library"/>
-						<entry excluding="lmots.c|lms.c|nist_kw.c|pkwrite.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/extras"/>
+						<entry excluding="mbedtls_config.c|net_sockets.c|pkcs7.c|ssl_cookie.c|ssl_tls12_server.c|ssl_tls13_server.c|timing.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/library"/>
+						<entry excluding="lmots.c|lms.c|nist_kw.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/extras"/>
 						<entry excluding="threading.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/platform"/>
 						<entry excluding="pkcs5.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/utilities"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/drivers/builtin/src"/>
@@ -246,8 +246,8 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="spe|sign_kit|ns_app/out|ns_app/mbedtls-4.1.1" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="mbedtls_config.c|net_sockets.c|pkcs7.c|ssl_cookie.c|ssl_tls12_server.c|ssl_tls13_server.c|timing.c|x509_create.c|x509_csr.c|x509write.c|x509write_crt.c|x509write_csr.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/library"/>
-						<entry excluding="lmots.c|lms.c|nist_kw.c|pkwrite.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/extras"/>
+						<entry excluding="mbedtls_config.c|net_sockets.c|pkcs7.c|ssl_cookie.c|ssl_tls12_server.c|ssl_tls13_server.c|timing.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/library"/>
+						<entry excluding="lmots.c|lms.c|nist_kw.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/extras"/>
 						<entry excluding="threading.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/platform"/>
 						<entry excluding="pkcs5.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/utilities"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/drivers/builtin/src"/>

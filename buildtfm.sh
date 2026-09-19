@@ -430,8 +430,8 @@ if ! grep -q '^slot2=0xc200000$' TFM_UPDATE.sh; then
     grep -E '^slot[0-3]=' TFM_UPDATE.sh || true
     exit 1
 fi
-if ! grep -q '^slot1=0xc090000$' TFM_UPDATE.sh; then
-    echo "错误: TFM_UPDATE.sh 的 slot1 必须是 0xc090000（S primary 已扩到 352 KB）"
+if ! grep -q '^slot1=0xc0d0000$' TFM_UPDATE.sh; then
+    echo "错误: TFM_UPDATE.sh 的 slot1 必须是 0xc0d0000（S primary 已扩到 352 KB）"
     grep -E '^slot[0-3]=' TFM_UPDATE.sh || true
     exit 1
 fi
