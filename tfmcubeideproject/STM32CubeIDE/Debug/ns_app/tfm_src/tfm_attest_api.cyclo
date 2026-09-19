@@ -1,2 +1,0 @@
-../ns_app/tfm_src/tfm_attest_api.c:14:1:psa_initial_attest_get_token	2
-../ns_app/tfm_src/tfm_attest_api.c:41:1:psa_initial_attest_get_token_size	2

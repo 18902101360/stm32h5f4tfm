@@ -1,7 +1,7 @@
 tfmcubeideproject 编译笔记（分支 stm32H573P256-SPIFLASH）
 
-本目录是 STM32CubeIDE 非安全工程（工程名 tfmminiproject），由 makefile 工程移植。
-签名 EC-P256，NS 执行槽 1 MB @ 0x0C100000。完整说明见仓库根目录 tfm编译笔记.txt。
+本目录是 STM32CubeIDE 非安全工程（工程名 tfmminiproject），由 makefile 工程移植，NS 应用含 Mbed TLS 4.1.1（PSA 客户端，源码在 STM32CubeIDE/ns_app/mbedtls-4.1.1）。
+签名 EC-P256，NS 执行槽 1 MB @ 0x0C100000。完整说明见仓库根目录 tfm编译笔记.txt 与 STM32CubeIDE/README.md。
 
 从旧工程迁过来：把本分支 SPE 导出整份覆盖过去就行，
 .cproject、应用代码、链接脚本模板都不用改。

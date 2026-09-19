@@ -1,4 +1,0 @@
-../ns_app/tfm_src/tfm_platform_api.c:13:25:tfm_platform_system_reset	2
-../ns_app/tfm_src/tfm_platform_api.c:30:1:tfm_platform_ioctl	4
-../ns_app/tfm_src/tfm_platform_api.c:67:1:tfm_platform_nv_counter_increment	2
-../ns_app/tfm_src/tfm_platform_api.c:87:1:tfm_platform_nv_counter_read	2

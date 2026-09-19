@@ -1,6 +1,0 @@
-../ns_app/tfm_src/uart_stdout.c:36:5:stdio_output_string	4
-../ns_app/tfm_src/uart_stdout.c:60:6:stdio_is_initialized_reset	1
-../ns_app/tfm_src/uart_stdout.c:65:6:stdio_is_initialized	1
-../ns_app/tfm_src/uart_stdout.c:165:5:_write	1
-../ns_app/tfm_src/uart_stdout.c:183:6:stdio_init	5
-../ns_app/tfm_src/uart_stdout.c:214:6:stdio_uninit	4

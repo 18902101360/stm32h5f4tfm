@@ -63,8 +63,21 @@
 									<listOptionValue builtIn="false" value="MCUBOOT_IMAGE_NUMBER=2"/>
 									<listOptionValue builtIn="false" value="TFM_NS_LOG"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="TF_PSA_CRYPTO_USER_CONFIG_FILE=&quot;ns_crypto_user.h&quot;"/>
+									<listOptionValue builtIn="false" value="MBEDTLS_USER_CONFIG_FILE=&quot;ns_mbedtls_user.h&quot;"/>
+									<listOptionValue builtIn="false" value="MBEDTLS_ALLOW_PRIVATE_ACCESS"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.1406558811" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/ns_app}&quot;"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/include"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/include"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/library"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/core"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/drivers/builtin/include"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/drivers/builtin/src"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/extras"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/platform"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/utilities"/>
 									<listOptionValue builtIn="false" value="../spe/api_ns/interface/include"/>
 									<listOptionValue builtIn="false" value="../spe/api_ns/interface/include/crypto_keys"/>
 									<listOptionValue builtIn="false" value="../spe/api_ns/platform/include"/>
@@ -74,7 +87,6 @@
 									<listOptionValue builtIn="false" value="../spe/api_ns/platform/ext/cmsis/Include/m-profile"/>
 									<listOptionValue builtIn="false" value="../spe/api_ns/platform/ext/common"/>
 									<listOptionValue builtIn="false" value="../spe/api_ns/platform/hal/Inc"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/ns_app}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.61647255" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -104,7 +116,12 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="spe" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="spe|sign_kit|ns_app/out|ns_app/mbedtls-4.1.1" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="mbedtls_config.c|net_sockets.c|pkcs7.c|ssl_cookie.c|ssl_tls12_server.c|ssl_tls13_server.c|timing.c|x509_create.c|x509_csr.c|x509write.c|x509write_crt.c|x509write_csr.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/library"/>
+						<entry excluding="lmots.c|lms.c|nist_kw.c|pkwrite.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/extras"/>
+						<entry excluding="memory_buffer_alloc.c|threading.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/platform"/>
+						<entry excluding="pkcs5.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/utilities"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/drivers/builtin/src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -169,8 +186,21 @@
 									<listOptionValue builtIn="false" value="MCUBOOT_IMAGE_NUMBER=2"/>
 									<listOptionValue builtIn="false" value="TFM_NS_LOG"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="MBEDTLS_ALLOW_PRIVATE_ACCESS"/>
+									<listOptionValue builtIn="false" value="TF_PSA_CRYPTO_USER_CONFIG_FILE=&quot;ns_crypto_user.h&quot;"/>
+									<listOptionValue builtIn="false" value="MBEDTLS_USER_CONFIG_FILE=&quot;ns_mbedtls_user.h&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.1614329565" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/ns_app}&quot;"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/include"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/include"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/library"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/core"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/drivers/builtin/include"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/drivers/builtin/src"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/extras"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/platform"/>
+									<listOptionValue builtIn="false" value="../ns_app/mbedtls-4.1.1/tf-psa-crypto/utilities"/>
 									<listOptionValue builtIn="false" value="../../Core/Inc"/>
 									<listOptionValue builtIn="false" value="../../Drivers/STM32H5xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../../Drivers/STM32H5xx_HAL_Driver/Inc/Legacy"/>
@@ -185,7 +215,6 @@
 									<listOptionValue builtIn="false" value="../spe/api_ns/platform/ext/cmsis/Include/m-profile"/>
 									<listOptionValue builtIn="false" value="../spe/api_ns/platform/ext/common"/>
 									<listOptionValue builtIn="false" value="../spe/api_ns/platform/hal/Inc"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/ns_app}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.2070274883" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -215,7 +244,12 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="sign_kit|spe" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="spe|sign_kit|ns_app/out|ns_app/mbedtls-4.1.1" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="mbedtls_config.c|net_sockets.c|pkcs7.c|ssl_cookie.c|ssl_tls12_server.c|ssl_tls13_server.c|timing.c|x509_create.c|x509_csr.c|x509write.c|x509write_crt.c|x509write_csr.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/library"/>
+						<entry excluding="lmots.c|lms.c|nist_kw.c|pkwrite.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/extras"/>
+						<entry excluding="memory_buffer_alloc.c|threading.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/platform"/>
+						<entry excluding="pkcs5.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/utilities"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ns_app/mbedtls-4.1.1/tf-psa-crypto/drivers/builtin/src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

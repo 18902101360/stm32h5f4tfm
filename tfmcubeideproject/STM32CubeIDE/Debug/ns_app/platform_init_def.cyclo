@@ -1,3 +1,0 @@
-../ns_app/platform_init_def.c:22:16:tfm_ns_platform_init	1
-../ns_app/platform_init_def.c:35:16:tfm_ns_platform_uninit	1
-../ns_app/platform_init_def.c:43:16:tfm_ns_cp_init	1

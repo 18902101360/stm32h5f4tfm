@@ -1,4 +1,0 @@
-../ns_app/tfm_src/tfm_its_api.c:19:14:psa_its_set	1
-../ns_app/tfm_src/tfm_its_api.c:38:14:psa_its_get	2
-../ns_app/tfm_src/tfm_its_api.c:73:14:psa_its_get_info	2
-../ns_app/tfm_src/tfm_its_api.c:102:14:psa_its_remove	1

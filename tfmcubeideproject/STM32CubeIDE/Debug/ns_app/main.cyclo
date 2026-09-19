@@ -1,6 +1,0 @@
-../ns_app/main.c:38:13:log_hex	2
-../ns_app/main.c:48:13:check	2
-../ns_app/main.c:58:13:test_crypto	5
-../ns_app/main.c:96:13:test_its	4
-../ns_app/main.c:124:13:test_fwu_query	3
-../ns_app/main.c:148:5:main	5

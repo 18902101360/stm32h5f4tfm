@@ -1,7 +1,0 @@
-../ns_app/tfm_src/tfm_ps_api.c:19:14:psa_ps_set	1
-../ns_app/tfm_src/tfm_ps_api.c:38:14:psa_ps_get	2
-../ns_app/tfm_src/tfm_ps_api.c:73:14:psa_ps_get_info	2
-../ns_app/tfm_src/tfm_ps_api.c:101:14:psa_ps_remove	1
-../ns_app/tfm_src/tfm_ps_api.c:115:14:psa_ps_create	1
-../ns_app/tfm_src/tfm_ps_api.c:125:14:psa_ps_set_extended	1
-../ns_app/tfm_src/tfm_ps_api.c:136:10:psa_ps_get_support	1

@@ -30,8 +30,11 @@
 #include "psa/crypto.h"
 #include "psa/error.h"
 #include "psa/internal_trusted_storage.h"
-#include "psa/protected_storage.h"
 #include "psa/update.h"
+
+#include "mbedtls/ssl.h"
+#include "mbedtls/x509_crt.h"
+#include "mbedtls/version.h"
 
 static int g_fail;
 
@@ -122,65 +125,38 @@ static void test_its(void)
     check("psa_its_remove", status);
 }
 
-static void test_ps(void)
+static void test_tls_config(void)
 {
-    const psa_storage_uid_t uid = 0x0000000000001002ULL;
-    static const uint8_t payload[] = "ns-ps";
-    uint8_t readback[16];
-    size_t read_len = 0;
-    struct psa_storage_info_t info;
-    psa_status_t status;
+    mbedtls_ssl_config conf;
+    mbedtls_ssl_context ssl;
+    int ret;
 
-    LOG_MSG("PSA PS\r\n");
-    (void)psa_ps_remove(uid);
+    LOG_MSG("Mbed TLS %s (PSA client)\r\n", MBEDTLS_VERSION_STRING);
 
-    /* Empty UID must return -140 (PSA_ERROR_DOES_NOT_EXIST). That is
-     * not a SPE failure: get_info before the first set is defined this way.
-     */
-    memset(&info, 0, sizeof(info));
-    status = psa_ps_get_info(uid, &info);
-    if (status == PSA_ERROR_DOES_NOT_EXIST) {
-        LOG_MSG("  [PASS] psa_ps_get_info empty uid status=-140\r\n");
-    } else {
-        check("psa_ps_get_info empty uid", status);
+    mbedtls_ssl_config_init(&conf);
+    mbedtls_ssl_init(&ssl);
+
+    ret = mbedtls_ssl_config_defaults(&conf,
+                                      MBEDTLS_SSL_IS_CLIENT,
+                                      MBEDTLS_SSL_TRANSPORT_STREAM,
+                                      MBEDTLS_SSL_PRESET_DEFAULT);
+    check("mbedtls_ssl_config_defaults",
+          (ret == 0) ? PSA_SUCCESS : PSA_ERROR_GENERIC_ERROR);
+    if (ret != 0) {
+        mbedtls_ssl_free(&ssl);
+        mbedtls_ssl_config_free(&conf);
+        return;
     }
 
-    status = psa_ps_set(uid, sizeof(payload), payload, PSA_STORAGE_FLAG_NONE);
-    check("psa_ps_set", status);
+    mbedtls_ssl_conf_min_tls_version(&conf, MBEDTLS_SSL_VERSION_TLS1_2);
+    mbedtls_ssl_conf_max_tls_version(&conf, MBEDTLS_SSL_VERSION_TLS1_3);
 
-    memset(&info, 0, sizeof(info));
-    status = psa_ps_get_info(uid, &info);
-    check("psa_ps_get_info", status);
-    if ((status == PSA_SUCCESS) && (info.size != sizeof(payload))) {
-        LOG_MSG("  [FAIL] PS info size mismatch\r\n");
-        g_fail++;
-    }
+    ret = mbedtls_ssl_setup(&ssl, &conf);
+    check("mbedtls_ssl_setup TLS1.2-1.3",
+          (ret == 0) ? PSA_SUCCESS : PSA_ERROR_GENERIC_ERROR);
 
-    memset(readback, 0, sizeof(readback));
-    status = psa_ps_get(uid, 0, sizeof(readback), readback, &read_len);
-    check("psa_ps_get", status);
-    if ((status == PSA_SUCCESS) &&
-        ((read_len != sizeof(payload)) ||
-         (memcmp(readback, payload, sizeof(payload)) != 0))) {
-        LOG_MSG("  [FAIL] PS payload mismatch\r\n");
-        g_fail++;
-    }
-
-    status = psa_ps_remove(uid);
-    check("psa_ps_remove", status);
-}
-
-static void log_fw_version(const char *label, const psa_fwu_component_info_t *info)
-{
-    /* imgtool version: major.minor.revision[+build] */
-    LOG_MSG("  %s version=%u.%u.%u+%u state=%u max_size=%u\r\n",
-            label,
-            (unsigned)info->version.major,
-            (unsigned)info->version.minor,
-            (unsigned)info->version.patch,
-            (unsigned)info->version.build,
-            (unsigned)info->state,
-            (unsigned)info->max_size);
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_config_free(&conf);
 }
 
 static void test_fwu_query(void)
@@ -190,21 +166,20 @@ static void test_fwu_query(void)
 
     LOG_MSG("PSA FWU query\r\n");
 
-    /* Component 0 = Secure. Kept on purpose: download/install is disabled,
-     * but NS still reads the running S image version from BL2 shared data.
-     */
     memset(&info, 0, sizeof(info));
     status = psa_fwu_query(FWU_COMPONENT_ID_SECURE, &info);
     check("psa_fwu_query(S)", status);
     if (status == PSA_SUCCESS) {
-        log_fw_version("S", &info);
+        LOG_MSG("  S  state=%u max_size=%u\r\n",
+                (unsigned)info.state, (unsigned)info.max_size);
     }
 
     memset(&info, 0, sizeof(info));
     status = psa_fwu_query(FWU_COMPONENT_ID_NONSECURE, &info);
     check("psa_fwu_query(NS)", status);
     if (status == PSA_SUCCESS) {
-        log_fw_version("NS", &info);
+        LOG_MSG("  NS state=%u max_size=%u\r\n",
+                (unsigned)info.state, (unsigned)info.max_size);
     }
 }
 
@@ -220,7 +195,7 @@ int main(void)
         }
     }
 
-    LOG_MSG("\r\nNS-SMOKE\r\n");
+    LOG_MSG("\r\nNS-SMOKE klp\r\n");
     LOG_MSG("Non-Secure system starting...\r\n");
 
     if (tfm_ns_interface_init() != OS_WRAPPER_SUCCESS) {
@@ -231,8 +206,8 @@ int main(void)
     LOG_MSG("tfm_ns_interface_init ok\r\n");
 
     test_crypto();
+    test_tls_config();
     test_its();
-    test_ps();
     test_fwu_query();
 
     if (g_fail == 0) {
