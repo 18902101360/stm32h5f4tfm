@@ -81,8 +81,8 @@ grep -a -F -q "H5F4SWP2" "${BL2_BIN}" \
     || die "${BL2_BIN} 没有 MCUBoot 0002 标记 H5F4SWP2（image 0 会 BusFault）。请: git pull && ./buildtfm.sh"
 grep -q '^slot2=0xc200000$' "${API_NS}/TFM_UPDATE.sh" \
     || die "${API_NS}/TFM_UPDATE.sh 的 slot2 不是 0xc200000"
-grep -q '^slot1=0xc0d0000$' "${API_NS}/TFM_UPDATE.sh" \
-    || die "${API_NS}/TFM_UPDATE.sh 的 slot1 不是 0xc0d0000（S 槽应为 352 KB）"
+grep -q '^slot1=0xc0f8000$' "${API_NS}/TFM_UPDATE.sh" \
+    || die "${API_NS}/TFM_UPDATE.sh 的 slot1 不是 0xc0f8000（S 槽应为 512 KB）"
 
 echo "将要烧录的目录: ${API_NS}"
 grep -E '^boot=|^slot0=|^slot1=|^slot2=|^slot3=' "${API_NS}/TFM_UPDATE.sh"

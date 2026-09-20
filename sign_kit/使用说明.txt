@@ -38,10 +38,10 @@
        tfm_ns_signed.bin / sapp_signed.bin（或 <输入名>_signed.bin）
 
 五、烧录地址（STM32H5F4，与 windows-tfm-tools / flash 脚本一致）
-  S  主槽：0x0C078000   签完约 352 KB
-  NS 主槽：0x0C0D0000   签完约 1200 KB
+  S  主槽：0x0C078000   签完约 512 KB
+  NS 主槽：0x0C0F8000   签完约 1024 KB
   S  副槽（升级）：0x0C200000
-  NS 副槽（升级）：0x0C258000
+  NS 副槽（升级）：0x0C280000
   不要使用 H573 的 0x0C088000 等地址。
   Windows 可把签好的镜像放进 windows-tfm-tools 后双击 tfm_update.bat。
   Linux 可用仓库根目录 ./flash_stm32h5f4.sh。
@@ -99,4 +99,4 @@
 九、常见问题
   - 签名成功但板子不启动 / primary slot invalid：密钥或 ROTPK 与 BL2 不一致，按第六节整仓同步并重烧。
   - cryptography / imgtool 报错：使用本目录独立 .venv 重装 requirements.txt。
-  - 槽溢出：未签名镜像过大，检查 layout 与槽大小（S 352KB / NS 1200KB）。
+  - 槽溢出：未签名镜像过大，检查 layout 与槽大小（S 512KB / NS 1024KB）。

@@ -117,7 +117,7 @@ A 和 B 可以同时存在。见下一节优先级。
     [3] 按第四节找镜像
     [4] 下载到安全别名地址
           S    0x0C078000
-          NS   0x0C0D0000     （H573 是 0x0C088000，禁止再用）
+          NS   0x0C0F8000     （H573 是 0x0C088000，禁止再用）
           BL2  0x0C00E000     （先解开 HDP/WRP 再烧 BL2）
     [5] 复位
 
@@ -147,10 +147,10 @@ tfm_update.bat 只烧「当前运行槽」（primary）。MCUBoot 升级要把�
   槽            槽名             安全别名 0x0C          非安全 0x08        大小
   ------------- ---------------  ---------------------  ----------------  --------
   BL2           boot=0xc00e000   0x0C00E000             0x0800E000        96 KB
-  S 当前运行    slot0=0xc078000  0x0C078000             0x08078000        352 KB
-  NS 当前运行   slot1=0xc0d0000  0x0C0D0000             0x080D0000        1200 KB
-  S 升级下载    slot2=0xc200000  0x0C200000             0x08200000        352 KB
-  NS 升级下载   slot3=0xc258000  0x0C258000             0x08258000        1200 KB
+  S 当前运行    slot0=0xc078000  0x0C078000             0x08078000        512 KB
+  NS 当前运行   slot1=0xc0f8000  0x0C0F8000             0x080F8000        1024 KB
+  S 升级下载    slot2=0xc200000  0x0C200000             0x08200000        512 KB
+  NS 升级下载   slot3=0xc280000  0x0C280000             0x08280000        1024 KB
 
 S 升级槽从 bank 2 开头（0x0C200000），不能紧挨 NS primary 后面，否则会跨 bank，
 BL2 读升级槽会卡死。H573 的升级地址是 0x0C118000 / 0x0C168000，禁止再用。
@@ -158,7 +158,7 @@ BL2 读升级槽会卡死。H573 的升级地址是 0x0C118000 / 0x0C168000，�
 用 CubeProgrammer 手动下升级包（签过名的 *_signed.bin）：
 
   STM32_Programmer_CLI -c port=SWD ap=1 mode=UR -d tfm_s_signed.bin  0x0C200000 -v
-  STM32_Programmer_CLI -c port=SWD ap=1 mode=UR -d tfm_ns_signed.bin 0x0C258000 -v
+  STM32_Programmer_CLI -c port=SWD ap=1 mode=UR -d tfm_ns_signed.bin 0x0C280000 -v
 
 下完复位，串口应仍先看到 H5F4BL2，然后 MCUBoot 交换槽。
 NS 应用里走 PSA Firmware Update / MCUBoot 写 secondary 时，也必须用上面这组地址。
@@ -195,8 +195,8 @@ H5F4 签名工具：
     手动：sign.bat Debug\tfm_ns.bin   （输出仍在 sign_kit\ 目录）
 
 签完大小必须对：
-  NS  1200 KB  烧 0x0C0D0000（升级槽 0x0C258000）
-  S    352 KB  烧 0x0C078000（升级槽 0x0C200000）
+  NS  1024 KB  烧 0x0C0F8000（升级槽 0x0C280000）
+  S    512 KB  烧 0x0C078000（升级槽 0x0C200000）
 
 签名需要 Python 3（第一次会自动建 sign_kit\.venv）。
 不要用仓库根目录 TF-M 的 .venv（cryptography 版本经常对不上）。
@@ -213,6 +213,6 @@ H5F4 签名工具：
 - 不要用本目录以前附带的 H573 hex（已从仓库删掉）
 - 不要把 NS 烧到 0x0C088000
 - 不要用 WRPSGn1、SECWM 只配到 127（那是 H573）
-- 不要把升级包烧到 primary（0x0C078000 / 0x0C0D0000）；升级请用 0x0C200000 / 0x0C258000
+- 不要把升级包烧到 primary（0x0C078000 / 0x0C0F8000）；升级请用 0x0C200000 / 0x0C280000
 - 不要用 H573 升级地址 0x0C118000 / 0x0C168000
 - Linux 请用仓库根目录 ./flash_stm32h5f4.sh，不要用这套 bat

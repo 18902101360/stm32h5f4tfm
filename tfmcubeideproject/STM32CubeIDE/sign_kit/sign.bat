@@ -81,7 +81,7 @@ if /I "%KIND%"=="ns" (
     set "VERSION=%MCUBOOT_IMAGE_VERSION_NS%"
     set "SEC_CNT=%MCUBOOT_SECURITY_COUNTER_NS%"
     set "DEP=(0, %MCUBOOT_S_IMAGE_MIN_VER%)"
-    set "SLOT_HINT=NS  1200KB @ 0x0C0D0000"
+    set "SLOT_HINT=NS  1024KB @ 0x0C0F8000"
     set "KIND_UP=NS"
 ) else (
     set "LAYOUT=%KIT%\layout\signing_layout_s.o"
@@ -89,7 +89,7 @@ if /I "%KIND%"=="ns" (
     set "VERSION=%MCUBOOT_IMAGE_VERSION_S%"
     set "SEC_CNT=%MCUBOOT_SECURITY_COUNTER_S%"
     set "DEP=(1, %MCUBOOT_NS_IMAGE_MIN_VER%)"
-    set "SLOT_HINT=S   352KB @ 0x0C078000"
+    set "SLOT_HINT=S   512KB @ 0x0C078000"
     set "KIND_UP=S"
 )
 

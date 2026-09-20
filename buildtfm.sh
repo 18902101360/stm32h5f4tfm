@@ -430,8 +430,8 @@ if ! grep -q '^slot2=0xc200000$' TFM_UPDATE.sh; then
     grep -E '^slot[0-3]=' TFM_UPDATE.sh || true
     exit 1
 fi
-if ! grep -q '^slot1=0xc0d0000$' TFM_UPDATE.sh; then
-    echo "错误: TFM_UPDATE.sh 的 slot1 必须是 0xc0d0000（S primary 已扩到 352 KB）"
+if ! grep -q '^slot1=0xc0f8000$' TFM_UPDATE.sh; then
+    echo "错误: TFM_UPDATE.sh 的 slot1 必须是 0xc0f8000（S primary 512 KB，NS @ 0x0C0F8000）"
     grep -E '^slot[0-3]=' TFM_UPDATE.sh || true
     exit 1
 fi
@@ -457,8 +457,8 @@ if mag == 0x6908:
         raise SystemExit(f"错误: {sys.argv[1]} 未保护 TLV 超出文件")
     _umag, utot = struct.unpack_from("<HH", data, end)
     end = end + utot
-# MCUBoot SWAP_USING_SCRATCH trailer for 150 NS sectors, write_sz=16, align=16.
-trailer = 150 * 3 * 16 + 80
+# MCUBoot SWAP_USING_SCRATCH trailer for 128 NS sectors (1024 KB / 8 KB).
+trailer = 128 * 3 * 16 + 80
 max_img = len(data) - trailer
 if end > max_img:
     raise SystemExit(
@@ -490,7 +490,7 @@ SLOT3="$(sed -n 's/^slot3=//p' TFM_UPDATE.sh | head -n1)"
 echo "NS 测试程序: ${TFM_ROOT}/build_ns/bin/tfm_ns_signed.bin  地址 0x${SLOT1#0x}"
 if [[ -n "${SLOT3}" ]]; then
     ns_sec=$((SLOT3))
-    ns_end=$((ns_sec + 0x12C000))
+    ns_end=$((ns_sec + 0x100000))
     user_sz=$((0x0C400000 - ns_end))
     printf 'NS 用户 Flash 数据区: 0x%X  大小 %d KB（到 4 MB 末尾）\n' "${ns_end}" "$((user_sz / 1024))"
 fi

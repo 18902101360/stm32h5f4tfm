@@ -16,9 +16,10 @@
 
 ### 相对 `stm32h5f4p256-usart6-bl2-public-key` 改了什么（本分支）
 
-Flash 仍是 4 MB 双 bank、S 352 KB / NS 1200 KB、升级槽在 Bank2。相对父分支：
+Flash 仍是 4 MB 双 bank。相对父分支：
 
-1. **PS 16 KB → 256 KB（32×8 KB），ITS 16 KB → 32 KB（4×8 KB）**。S 主槽从 `0x0C038000` 挪到 **`0x0C078000`**，NS 主槽从 `0x0C090000` 挪到 **`0x0C0D0000`**。Bank1 空隙剩 16 KB。升级槽仍是 `0x0C200000` / `0x0C258000`。
+1. **PS 16 KB → 256 KB（32×8 KB），ITS 16 KB → 32 KB（4×8 KB）**。S 主槽从 `0x0C038000` 挪到 **`0x0C078000`**。
+2. **S 槽 352 KB → 512 KB**，给后续 SPE 更新留余量；NS 从 1200 KB 收到 **1024 KB**（Bank1 装不下两者同时加大）。NS 主槽 **`0x0C0F8000`**。Bank1 空隙 32 KB。升级槽 S 仍 `0x0C200000`（现 512 KB），NS **`0x0C280000`**。
 
 | 偏移 | 区 | 大小 |
 |------|----|------|
@@ -26,15 +27,15 @@ Flash 仍是 4 MB 双 bank、S 352 KB / NS 1200 KB、升级槽在 Bank2。相对
 | `0x0000C000` | BL2 计数 / MCUBoot / OTP / NV | 到 `0x30000` |
 | `0x00030000` | **PS** | **256 KB** |
 | `0x00070000` | **ITS** | **32 KB** |
-| `0x00078000` | S 主槽 | 352 KB → `0x0C078000` |
-| `0x000D0000` | NS 主槽 | 1200 KB → `0x0C0D0000` |
-| `0x001FC000` | Bank1 未用 | 16 KB |
-| `0x00200000` | S 升级槽 | 352 KB |
-| `0x00258000` | NS 升级槽 | 1200 KB |
-| `0x00384000` | NS 用户 Flash | 496 KB |
+| `0x00078000` | S 主槽 | **512 KB** → `0x0C078000` |
+| `0x000F8000` | NS 主槽 | **1024 KB** → `0x0C0F8000` |
+| `0x001F8000` | Bank1 未用 | 32 KB |
+| `0x00200000` | S 升级槽 | 512 KB |
+| `0x00280000` | NS 升级槽 | 1024 KB |
+| `0x00380000` | NS 用户 Flash | 512 KB |
 
-2. 对象上限：`ITS_MAX_ASSET_SIZE=512`，`ITS_NUM_ASSETS=16`（ITS FS 最少 4 个 8 KB 块；16 个满额可同时放下）；`PS_NUM_ASSETS=120`。TF-M 要求对象表放进 `PS_MAX_ASSET_SIZE` 同一块静态缓冲（120 槽加密表约 3920 B），因此 **`PS_MAX_ASSET_SIZE=4096`**（不能再用 2048）。单对象最大 4 KB；256 KB PS 里数据块约 240 KB，满额约 50 个能同时存在，槽位仍 120。
-3. CubeIDE NS 打开 PKCS#10 CSR 解析/生成和自行签发证书（`MBEDTLS_PK_WRITE_C` / `MBEDTLS_PEM_WRITE_C`，编入 `x509_csr.c` / `x509write_*.c` / `pkwrite.c`）。`test_csr()` 用 SPE 里的 P-256 冒烟。
+3. 对象上限：`ITS_MAX_ASSET_SIZE=512`，`ITS_NUM_ASSETS=16`（ITS FS 最少 4 个 8 KB 块；16 个满额可同时放下）；`PS_NUM_ASSETS=120`。TF-M 要求对象表放进 `PS_MAX_ASSET_SIZE` 同一块静态缓冲（120 槽加密表约 3920 B），因此 **`PS_MAX_ASSET_SIZE=4096`**（不能再用 2048）。单对象最大 4 KB；256 KB PS 里数据块约 240 KB，满额约 50 个能同时存在，槽位仍 120。加密走 PSA AEAD 时，Crypto 分区 scratch 要同时放下明文和密文+tag（约 8.2 KB），默认 `CRYPTO_IOVEC_BUFFER_SIZE=5120` 不够，`TFM_S_PS_TEST_1022` / `TFM_NS_PS_TEST_1025` 会在 `psa_ps_set` 失败。本平台改为 **`CRYPTO_IOVEC_BUFFER_SIZE=20480`**（与 H573 相同）。
+4. CubeIDE NS 打开 PKCS#10 CSR 解析/生成和自行签发证书（`MBEDTLS_PK_WRITE_C` / `MBEDTLS_PEM_WRITE_C`，编入 `x509_csr.c` / `x509write_*.c` / `pkwrite.c`）。`test_csr()` 用 SPE 里的 P-256 冒烟。
 
 改完必须 **回归并重烧 BL2 + S + NS**（主槽地址已变，旧镜像不能直接补烧）。
 
@@ -194,7 +195,7 @@ Linux 烧录 `./flash_stm32h5f4.sh` 会用 SPE 编出来的那份脚本；NS 工
 ### 签名（自己编的未加密 .bin）
 
 `./buildtfm.sh` 编出来的 `tfm_s_signed.bin` / `tfm_ns_signed.bin` 已经签过。  
-makefile / CubeIDE 自己编的未签名 `.bin` 必须先签再烧。工具按 H5F4 槽位（NS 1200 KB、S 352 KB）。仓库根目录另有独立工具包 **`sign_kit/`** 与 **`sign_kit.zip`**（含 `使用说明.txt`，含换密钥步骤；H5F4 槽位）。不要使用 H573 的 NS `0x0C088000` / 576 KB 布局。
+makefile / CubeIDE 自己编的未签名 `.bin` 必须先签再烧。工具按 H5F4 槽位（NS 1024 KB、S 512 KB）。仓库根目录另有独立工具包 **`sign_kit/`** 与 **`sign_kit.zip`**（含 `使用说明.txt`，含换密钥步骤；H5F4 槽位）。不要使用 H573 的 NS `0x0C088000` / 576 KB 布局。
 
 | 工程 | 工具目录 | 签完写到哪 |
 |------|----------|------------|
@@ -218,7 +219,7 @@ sign.bat sapp.bin
 ```
 
 文件名带 `ns` 按非安全签；带 `sapp` / `tfm_s` 按安全签。看不出来时：`./sign.sh ns app.bin`。  
-签完大小：NS **1200 KB** 烧 `0x0C0D0000`（升级槽 `0x0C258000`）；S **352 KB** 烧 `0x0C078000`（升级槽 `0x0C200000`）。  
+签完大小：NS **1024 KB** 烧 `0x0C0F8000`（升级槽 `0x0C280000`）；S **512 KB** 烧 `0x0C078000`（升级槽 `0x0C200000`）。  
 第一次会建 `sign_kit/.venv`，或复用 `tfmmakeproject/.sign-venv`。不要用仓库根目录 TF-M 的 `.venv`（cryptography 对不上会报 `Loaded python version: 50.0.0, shared object version: b'50.0.1'`）。
 
 详细用法：`tfmmakeproject/sign_kit/README.md`、`tfmcubeideproject/STM32CubeIDE/sign_kit/README.md`。
@@ -242,7 +243,7 @@ sign.bat sapp.bin
 
 开发镜像用 TF-M dummy **EC-P256** 密钥（`stm32h5f4` 支线仍为 RSA-3072），启动日志里的 `NOT SECURE` 是预期现象。与 RSA 支线互切后必须整片重烧 BL2 + S + NS，并使用本支线的 `sign_kit/keys`。更换自有密钥见上文「更换密钥」。
 
-`./flash_stm32h5f4.sh` 只写当前运行槽（BL2 / S primary / NS primary）。**升级下载**请写 MCUBoot secondary：S `0x0C200000`（`slot2`）、NS `0x0C258000`（`slot3`）。不要用 H573 的 `0x0C118000` / `0x0C168000`。完整表见下面 Windows 一节。
+`./flash_stm32h5f4.sh` 只写当前运行槽（BL2 / S primary / NS primary）。**升级下载**请写 MCUBoot secondary：S `0x0C200000`（`slot2`）、NS `0x0C280000`（`slot3`）。不要用 H573 的 `0x0C118000` / `0x0C168000`。完整表见下面 Windows 一节。
 
 ### Windows 烧录
 
@@ -257,7 +258,7 @@ sign.bat sapp.bin
    - **其次**：把整份 `trusted-firmware-m/build_s` 和 `build_ns` 拷成  
      `windows-tfm-tools\build_s`、`windows-tfm-tools\build_ns`
 5. 双击 `tfm_update.bat`：擦除 → 烧 option bytes → 找镜像 → 下载到 **当前运行槽**  
-   BL2 `0x0C00E000`、S `0x0C078000`、NS `0x0C0D0000`。  
+   BL2 `0x0C00E000`、S `0x0C078000`、NS `0x0C0F8000`。  
    只重烧镜像：`tfm_update.bat images-only`。只擦：`erase_flash.bat`。
 
 **升级下载地址**（MCUBoot secondary，不要写到 primary）：
@@ -265,16 +266,16 @@ sign.bat sapp.bin
 | 槽 | 槽名 | 安全别名 `0x0C` | 非安全 `0x08` | 大小 |
 |----|-----------------|-----------------|---------------|------|
 | BL2 | `boot=0xc00e000` | `0x0C00E000` | `0x0800E000` | 96 KB |
-| S 当前运行 | `slot0=0xc078000` | `0x0C078000` | `0x08078000` | 352 KB |
-| NS 当前运行 | `slot1=0xc0d0000` | `0x0C0D0000` | `0x080D0000` | 1200 KB |
-| **S 升级下载** | `slot2=0xc200000` | **`0x0C200000`** | `0x08200000` | 352 KB |
-| **NS 升级下载** | `slot3=0xc258000` | **`0x0C258000`** | `0x08258000` | 1200 KB |
+| S 当前运行 | `slot0=0xc078000` | `0x0C078000` | `0x08078000` | 512 KB |
+| NS 当前运行 | `slot1=0xc0f8000` | `0x0C0F8000` | `0x080F8000` | 1024 KB |
+| **S 升级下载** | `slot2=0xc200000` | **`0x0C200000`** | `0x08200000` | 512 KB |
+| **NS 升级下载** | `slot3=0xc280000` | **`0x0C280000`** | `0x08280000` | 1024 KB |
 
 CubeProgrammer 示例：
 
 ```bat
 STM32_Programmer_CLI -c port=SWD ap=1 mode=UR -d tfm_s_signed.bin  0x0C200000 -v
-STM32_Programmer_CLI -c port=SWD ap=1 mode=UR -d tfm_ns_signed.bin 0x0C258000 -v
+STM32_Programmer_CLI -c port=SWD ap=1 mode=UR -d tfm_ns_signed.bin 0x0C280000 -v
 ```
 
 S 升级槽必须从 bank 2 开头（`0x0C200000`）。H573 的 `0x0C118000` / `0x0C168000` 禁止再用。
@@ -313,7 +314,7 @@ NS 大缓冲可放到 `.ram2` / `.bss.ram2`，或使用 `__ns_ram2_start__` / `_
 
 - 增加非安全测试代码 nsdev.tar.xz ，在 ubuntu22.04 解压后执行make即可运行，这个工程不含硬件浮点计算。
 
-- 增加 H5F4 `sign_kit` 签名工具：`tfmmakeproject/sign_kit` 与 `tfmcubeideproject/STM32CubeIDE/sign_kit`。只签未加密固件。NS 1200 KB @ `0x0C0D0000`，S 352 KB @ `0x0C078000`。Linux：`./sign.sh tfm_ns.bin`；Windows：`sign.bat tfm_ns.bin`。根目录旧的 `sign_kit.zip`（H573）已从 `stm32h5f4` 删除。支线 `stm32h5f4p256` 仅把 MCUboot 签名改为 EC-P256（相对 `stm32h5f4` 的差异与换密钥步骤见上文）。
+- 增加 H5F4 `sign_kit` 签名工具：`tfmmakeproject/sign_kit` 与 `tfmcubeideproject/STM32CubeIDE/sign_kit`。只签未加密固件。NS 1024 KB @ `0x0C0F8000`，S 512 KB @ `0x0C078000`。Linux：`./sign.sh tfm_ns.bin`；Windows：`sign.bat tfm_ns.bin`。根目录旧的 `sign_kit.zip`（H573）已从 `stm32h5f4` 删除。支线 `stm32h5f4p256` 仅把 MCUboot 签名改为 EC-P256（相对 `stm32h5f4` 的差异与换密钥步骤见上文）。
 
 - 根目录旧的 `tfm-h573-flash签名固件下载固件快捷脚本.zip`（H573 地址：NS `0x0C088000` / 576 KB）已从 `stm32h5f4` 删除。Windows 烧录用 `windows-tfm-tools`，签名用上面的 `sign_kit`。
 

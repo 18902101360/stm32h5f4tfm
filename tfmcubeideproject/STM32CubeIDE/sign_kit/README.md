@@ -40,12 +40,12 @@ CubeIDE post-build 也是签到这里，不在 `Debug\`。
 
 | 镜像 | 地址 | 签完大小 |
 |---|---|---|
-| `*_s_signed.bin` | `0x0C078000` | 352 KB |
-| `*_ns_signed.bin` | `0x0C0D0000` | 1200 KB |
+| `*_s_signed.bin` | `0x0C078000` | 512 KB |
+| `*_ns_signed.bin` | `0x0C0F8000` | 1024 KB |
 
 签完把 `tfm_ns_signed.bin` 放到 `windows-tfm-tools`，双击 `tfm_update.bat` 下载。Linux 用仓库根目录 `./flash_stm32h5f4.sh`。
 
-升级下载（同一份 `*_signed.bin`）：S `0x0C200000`，NS `0x0C258000`。不要用 H573 的 `0x0C088000` / `0x0C118000` / `0x0C168000`。
+升级下载（同一份 `*_signed.bin`）：S `0x0C200000`，NS `0x0C280000`。不要用 H573 的 `0x0C088000` / `0x0C118000` / `0x0C168000`。
 
 本目录的密钥是 TF-M 开发用 dummy **EC-P256**（本分支 `stm32h5f4-p256`），和当前 SPE/BL2 配套。`stm32h5f4` 主线仍是 RSA-3072。量产请替换 `keys/` 并同步更新板上 ROTPK。
 换过 SPE 后请拷新的 `layout/signing_layout_*.o`（来自 `trusted-firmware-m/build_s/api_ns/image_signing/layout_files`）。

@@ -25,19 +25,18 @@
  */
  /* Flash layout for stm32h5f4 with BL2 (multiple image boot).
   * Hardware flash is 4 MB dual-bank (2 MB per bank, 8 KB sectors).
-  * NS application slot is 1200 KB; leftover flash is NS user data.
+  * NS application slot is 1024 KB; leftover flash is NS user data.
   *
   * A MCUBoot slot must not cross a bank boundary. After the S primary
-  * and 1200 KB NS primary, the next byte is still in bank 1.
+  * and 1024 KB NS primary, the next byte is still in bank 1.
   * Placing S secondary there would span into bank 2 at 0x200000
   * and BL2 hangs when it first reads that slot (image 0, after NS).
   * S secondary therefore starts at bank 2; the rest of bank 1 is unused.
   *
-  * S slots are 352 KB: TEST_S tfm_s plus RSA-3072 TLV does not fit a
-  * 320 KB slot once MCUBoot also reserves a swap trailer sized for the
-  * 150 NS sectors (MCUBOOT_MAX_IMG_SECTORS). MCUBoot then rejects
-  * image 0 with "Image in the primary slot is not valid".
- *
+  * S slots are 512 KB so TEST_S (about 339 KB payload today) has room
+  * for later SPE growth. NS is 1024 KB (CubeIDE NS is far smaller).
+  * Bank1 after ITS is 1568 KB: 512 + 1024 + 32 unused.
+  *
  * 0x0000_0000 SCRATCH (48 KB)
  * 0x0000_C000 BL2 - counters(16 KB)
  * 0x0001_0000 BL2 - MCUBoot (96 KB)
@@ -45,12 +44,12 @@
  * 0x0002_C000 NV counters area (16 KB)
  * 0x0003_0000 Secure Storage Area (256 KB)
  * 0x0007_0000 Internal Trusted Storage Area (32 KB)
- * 0x0007_8000 Secure image     primary slot (352 KB)
- * 0x000D_0000 Non-secure image primary slot (1200 KB)
- * 0x001F_C000 unused (16 KB, remainder of bank 1)
- * 0x0020_0000 Secure image     secondary slot (352 KB, bank 2)
- * 0x0025_8000 Non-secure image secondary slot (1200 KB)
- * 0x0038_4000 Non-secure user flash data (496 KB, to end of 4 MB)
+ * 0x0007_8000 Secure image     primary slot (512 KB)
+ * 0x000F_8000 Non-secure image primary slot (1024 KB)
+ * 0x001F_8000 unused (32 KB, remainder of bank 1)
+ * 0x0020_0000 Secure image     secondary slot (512 KB, bank 2)
+ * 0x0028_0000 Non-secure image secondary slot (1024 KB)
+ * 0x0038_0000 Non-secure user flash data (512 KB, to end of 4 MB)
  *
  * Bl2 binary is written at 0x1_0000:
  * it contains bl2_counter init value, OTP write protect, NV counters area init.
@@ -153,8 +152,8 @@
 #error "FLASH_ITS_AREA_OFFSET not aligned on FLASH_AREA_IMAGE_SECTOR_SIZE"
 #endif /*  (FLASH_ITS_AREA_OFFSET % FLASH_AREA_IMAGE_SECTOR_SIZE) != 0 */
 
-#define FLASH_S_PARTITION_SIZE          (0x58000)   /* 352 KB for S partition */
-#define FLASH_NS_PARTITION_SIZE         (0x12C000)  /* 1200 KB (1.2 MB) for NS partition */
+#define FLASH_S_PARTITION_SIZE          (0x80000)   /* 512 KB for S partition */
+#define FLASH_NS_PARTITION_SIZE         (0x100000)  /* 1024 KB for NS partition */
 
 #define FLASH_PARTITION_SIZE            (FLASH_S_PARTITION_SIZE+FLASH_NS_PARTITION_SIZE)
 
@@ -250,7 +249,7 @@
 #define MCUBOOT_STATUS_MAX_ENTRIES         ((FLASH_MAX_PARTITION_SIZE) / \
                                             FLASH_AREA_SCRATCH_SIZE)
 /* Maximum number of image sectors supported by the bootloader.
- * NS is 1200 KB / 8 KB = 150. MCUBoot sizes the swap-status trailer for this
+ * NS is 1024 KB / 8 KB = 128. MCUBoot sizes the swap-status trailer for this
  * count in every slot, including the smaller S slot. A matching MCUBoot patch
  * (0002) drops an erased swap_size so a factory S image is not treated as a
  * mid-swap and does not walk the sector table off the end of SRAM.

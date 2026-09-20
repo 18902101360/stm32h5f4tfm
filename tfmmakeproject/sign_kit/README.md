@@ -4,7 +4,7 @@
 必须和当前板上的 H5F4 BL2 / SPE 配套（`H5F4BL2` / `H5F4SWP2`）。
 
 布局、密钥、imgtool 与本 makefile 工程 `api_ns` 导出一致：
-NS 槽 1200 KB @ `0x0C0D0000`，S 槽 352 KB @ `0x0C078000`，`BL2_TRAILER_SIZE=0x3000`。
+NS 槽 1024 KB @ `0x0C0F8000`，S 槽 512 KB @ `0x0C078000`，`BL2_TRAILER_SIZE=0x3000`。
 
 ## 用法
 
@@ -46,13 +46,13 @@ sign.bat sapp.bin
 
 | 镜像 | 地址 | 签完大小 |
 |---|---|---|
-| `*_s_signed.bin` | `0x0C078000` | 352 KB |
-| `*_ns_signed.bin` | `0x0C0D0000` | 1200 KB |
+| `*_s_signed.bin` | `0x0C078000` | 512 KB |
+| `*_ns_signed.bin` | `0x0C0F8000` | 1024 KB |
 
 签完把 `tfm_ns_signed.bin` 放到 `windows-tfm-tools`，双击 `tfm_update.bat`。
 Linux 也可用仓库根目录 `./flash_stm32h5f4.sh`。
 
-升级下载（同一份 `*_signed.bin`，地址不同）：S `0x0C200000`，NS `0x0C258000`。不要用 H573 的 `0x0C118000` / `0x0C168000`。
+升级下载（同一份 `*_signed.bin`，地址不同）：S `0x0C200000`，NS `0x0C280000`。不要用 H573 的 `0x0C118000` / `0x0C168000`。
 
 本目录的密钥是 TF-M 开发用 dummy **EC-P256**（本分支 `stm32h5f4-p256`），和当前 SPE/BL2 配套。`stm32h5f4` 主线仍是 RSA-3072。量产请替换 `keys/` 并同步更新板上 ROTPK。
 换过 SPE 后请拷新的 `layout/signing_layout_*.o`（来自 `trusted-firmware-m/build_s/api_ns/image_signing/layout_files`）。
