@@ -10,7 +10,7 @@
 #   make clean
 #
 # CPU/ABI must match SPE: cortex-m33+nodsp, hard float, FPv5-SP-D16.
-# MCU STM32H5F4xx, NS slot 0x0C090000, BL2_TRAILER_SIZE=0x3000.
+# MCU STM32H5F4xx, NS slot 0x0C0D0000, BL2_TRAILER_SIZE=0x3000.
 # s_veneers.o is linked as a raw object (absolute NSC addresses).
 #
 # NS bring-up matches tf-m-tests/app_broker/main_ns.c without RTX.

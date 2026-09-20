@@ -43,11 +43,11 @@
  * 0x0001_0000 BL2 - MCUBoot (96 KB)
  * 0x0002_8000 OTP Write Protect (16 KB)
  * 0x0002_C000 NV counters area (16 KB)
- * 0x0003_0000 Secure Storage Area (16 KB)
- * 0x0003_4000 Internal Trusted Storage Area (16 KB)
- * 0x0003_8000 Secure image     primary slot (352 KB)
- * 0x0009_0000 Non-secure image primary slot (1200 KB)
- * 0x001B_C000 unused (272 KB, remainder of bank 1)
+ * 0x0003_0000 Secure Storage Area (256 KB)
+ * 0x0007_0000 Internal Trusted Storage Area (32 KB)
+ * 0x0007_8000 Secure image     primary slot (352 KB)
+ * 0x000D_0000 Non-secure image primary slot (1200 KB)
+ * 0x001F_C000 unused (16 KB, remainder of bank 1)
  * 0x0020_0000 Secure image     secondary slot (352 KB, bank 2)
  * 0x0025_8000 Non-secure image secondary slot (1200 KB)
  * 0x0038_4000 Non-secure user flash data (496 KB, to end of 4 MB)
@@ -136,7 +136,7 @@
 #endif /*  (FLASH_NV_COUNTER_AREA_SIZE % FLASH_AREA_IMAGE_SECTOR_SIZE) != 0 */
 
 /* Secure Storage (PS) Service definitions */
-#define FLASH_PS_AREA_SIZE             (FLASH_AREA_IMAGE_SECTOR_SIZE+FLASH_AREA_IMAGE_SECTOR_SIZE)
+#define FLASH_PS_AREA_SIZE             (32 * FLASH_AREA_IMAGE_SECTOR_SIZE) /* 256 KB */
 #define FLASH_PS_AREA_OFFSET           (FLASH_NV_COUNTERS_AREA_OFFSET+FLASH_NV_COUNTERS_AREA_SIZE)
 
 /* Control Secure Storage (PS) Service definitions*/
@@ -146,7 +146,7 @@
 
 /* Internal Trusted Storage (ITS) Service definitions */
 #define FLASH_ITS_AREA_OFFSET           (FLASH_PS_AREA_OFFSET+FLASH_PS_AREA_SIZE)
-#define FLASH_ITS_AREA_SIZE             (FLASH_AREA_IMAGE_SECTOR_SIZE+FLASH_AREA_IMAGE_SECTOR_SIZE)
+#define FLASH_ITS_AREA_SIZE             (4 * FLASH_AREA_IMAGE_SECTOR_SIZE) /* 32 KB */
 
 /*Control  Internal Trusted Storage (ITS) Service definitions */
 #if (FLASH_ITS_AREA_OFFSET % FLASH_AREA_IMAGE_SECTOR_SIZE) != 0

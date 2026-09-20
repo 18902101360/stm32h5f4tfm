@@ -81,8 +81,8 @@ grep -a -F -q "H5F4SWP2" "${BL2_BIN}" \
     || die "${BL2_BIN} 没有 MCUBoot 0002 标记 H5F4SWP2（image 0 会 BusFault）。请: git pull && ./buildtfm.sh"
 grep -q '^slot2=0xc200000$' "${API_NS}/TFM_UPDATE.sh" \
     || die "${API_NS}/TFM_UPDATE.sh 的 slot2 不是 0xc200000"
-grep -q '^slot1=0xc090000$' "${API_NS}/TFM_UPDATE.sh" \
-    || die "${API_NS}/TFM_UPDATE.sh 的 slot1 不是 0xc090000（S 槽应为 352 KB）"
+grep -q '^slot1=0xc0d0000$' "${API_NS}/TFM_UPDATE.sh" \
+    || die "${API_NS}/TFM_UPDATE.sh 的 slot1 不是 0xc0d0000（S 槽应为 352 KB）"
 
 echo "将要烧录的目录: ${API_NS}"
 grep -E '^boot=|^slot0=|^slot1=|^slot2=|^slot3=' "${API_NS}/TFM_UPDATE.sh"
@@ -153,7 +153,7 @@ case "${MODE}" in
         printf '%s\n' "${OB_DUMP}" | grep -E "WRP|HDP|PRODUCT|SECWM" || true
         if hdp1_overlaps_bl2 "${OB_DUMP}"; then
             echo
-            echo ">>> HDP1 仍覆盖 BL2。S/NS 能校验通过是因为它们在 0x0C038000 之外；"
+            echo ">>> HDP1 仍覆盖 BL2。S/NS 能校验通过是因为它们在 0x0C078000 之外；"
             echo "    BL2 在 0x0C00E000，落在 HDP1 [STRT, END] 里面。"
             echo "    只跑 -ob HDP1_STRT=1 HDP1_END=0 不能缩小已设置的 HDP。"
             if [[ "${MODE}" == "unlock-only" ]]; then
