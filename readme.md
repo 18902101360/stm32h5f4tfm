@@ -33,7 +33,7 @@ Flash 仍是 4 MB 双 bank、S 352 KB / NS 1200 KB、升级槽在 Bank2。相对
 | `0x00258000` | NS 升级槽 | 1200 KB |
 | `0x00384000` | NS 用户 Flash | 496 KB |
 
-2. 对象上限：`ITS_MAX_ASSET_SIZE=512`，`ITS_NUM_ASSETS=16`（ITS FS 最少 4 个 8 KB 块；16 个满额可同时放下）；`PS_NUM_ASSETS=120`。TF-M 要求对象表放进 `PS_MAX_ASSET_SIZE` 同一块静态缓冲（120 槽加密表约 3920 B），因此 **`PS_MAX_ASSET_SIZE=4096`**（不能再用 2048）。单对象最大 4 KB；256 KB PS 里数据块约 240 KB，满额约 50 个能同时存在，槽位仍 120。
+2. 对象上限：`ITS_MAX_ASSET_SIZE=512`，`ITS_NUM_ASSETS=16`（ITS FS 最少 4 个 8 KB 块；16 个满额可同时放下）；`PS_NUM_ASSETS=120`。TF-M 要求对象表放进 `PS_MAX_ASSET_SIZE` 同一块静态缓冲（120 槽加密表约 3920 B），因此 **`PS_MAX_ASSET_SIZE=4096`**（不能再用 2048）。单对象最大 4 KB；256 KB PS 里数据块约 240 KB，满额约 50 个能同时存在，槽位仍 120。加密走 PSA AEAD 时，Crypto 分区 scratch 要同时放下明文和密文+tag（约 8.2 KB），默认 `CRYPTO_IOVEC_BUFFER_SIZE=5120` 不够，`TFM_S_PS_TEST_1022` / `TFM_NS_PS_TEST_1025` 会在 `psa_ps_set` 失败。本平台改为 **`CRYPTO_IOVEC_BUFFER_SIZE=20480`**（与 H573 相同）。
 3. CubeIDE NS 打开 PKCS#10 CSR 解析/生成和自行签发证书（`MBEDTLS_PK_WRITE_C` / `MBEDTLS_PEM_WRITE_C`，编入 `x509_csr.c` / `x509write_*.c` / `pkwrite.c`）。`test_csr()` 用 SPE 里的 P-256 冒烟。
 
 改完必须 **回归并重烧 BL2 + S + NS**（主槽地址已变，旧镜像不能直接补烧）。
