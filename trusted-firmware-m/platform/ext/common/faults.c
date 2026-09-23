@@ -7,9 +7,23 @@
 #include "config_tfm.h"
 
 #include "tfm_hal_device_header.h"
+#include "tfm_log.h"
 #include "utilities.h"
 /* "exception_info.h" must be the last include because of the IAR pragma */
 #include "exception_info.h"
+
+static void panic_print_fault(const char *name)
+{
+    ERROR_RAW("\r\nPANIC %s vect=0x%x cfsr=0x%08x hfsr=0x%08x sfsr=0x%08x bfar=0x%08x mmfar=0x%08x sfar=0x%08x\r\n",
+              name,
+              (unsigned int)(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk),
+              (unsigned int)SCB->CFSR,
+              (unsigned int)SCB->HFSR,
+              (unsigned int)SAU->SFSR,
+              (unsigned int)SCB->BFAR,
+              (unsigned int)SCB->MMFAR,
+              (unsigned int)SAU->SFAR);
+}
 
 void C_HardFault_Handler(void)
 {
@@ -18,6 +32,7 @@ void C_HardFault_Handler(void)
      * Returning from this exception could allow a pending NS exception to be
      * taken, so the current solution is not to return.
      */
+    panic_print_fault("HardFault");
     tfm_core_panic();
 }
 
@@ -39,6 +54,7 @@ void C_MemManage_Handler(void)
      * raised. Returning from this exception could allow a pending NS exception
      * to be taken, so the current solution is to panic.
      */
+    panic_print_fault("MemManage");
     tfm_core_panic();
 }
 
@@ -60,6 +76,7 @@ void C_BusFault_Handler(void)
      * Returning from this exception could allow a pending NS exception to be
      * taken, so the current solution is to panic.
      */
+    panic_print_fault("BusFault");
     tfm_core_panic();
 }
 
@@ -81,6 +98,7 @@ void C_SecureFault_Handler(void)
      * Returning from this exception could allow a pending NS exception to be
      * taken, so the current solution is to panic.
      */
+    panic_print_fault("SecureFault");
     tfm_core_panic();
 }
 
@@ -97,6 +115,7 @@ __attribute__((naked)) void SecureFault_Handler(void)
 
 void C_UsageFault_Handler(void)
 {
+    panic_print_fault("UsageFault");
     tfm_core_panic();
 }
 
