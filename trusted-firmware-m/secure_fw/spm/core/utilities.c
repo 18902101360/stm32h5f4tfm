@@ -12,14 +12,23 @@
 #include "fih.h"
 #include "utilities.h"
 #include "tfm_hal_platform.h"
+#include "tfm_hal_device_header.h"
+#include "tfm_log.h"
 
 #ifdef CONFIG_TFM_BACKTRACE_ON_CORE_PANIC
-#include "tfm_log.h"
 #include "backtrace.h"
 #endif
 
 void tfm_core_panic(void)
 {
+    uint32_t lr = (uint32_t)(uintptr_t)__builtin_return_address(0);
+
+    ERROR_RAW("\r\nPANIC tfm_core_panic from lr=0x%08x cfsr=0x%08x hfsr=0x%08x sfsr=0x%08x\r\n",
+              (unsigned int)lr,
+              (unsigned int)SCB->CFSR,
+              (unsigned int)SCB->HFSR,
+              (unsigned int)SAU->SFSR);
+
     (void)fih_delay();
 #ifdef CONFIG_TFM_BACKTRACE_ON_CORE_PANIC
     tfm_dump_backtrace(__func__, tfm_log);
