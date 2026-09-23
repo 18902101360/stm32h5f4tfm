@@ -12,9 +12,9 @@
 | `stm32h5f4p256-usart6-bl2-public-key` | **EC-P256** | 基于 `stm32h5f4p256-usart6`：BL2 OTP ROTPK 可只用 `keys/` 公钥 |
 | `stm32h5f4p256-usart6-bl2-public-key-ps256` | **EC-P256** | 基于 `stm32h5f4p256-usart6-bl2-public-key`：CubeIDE CSR 解析/签发；**PS 256 KB、ITS 32 KB**；S/NS 主槽后移 |
 
-本文档所在分支为 **`stm32h5f4p256-usart6-bl2-public-key-ps256`**。
+本文档所在分支为 **`cursor/h5f4-s-panic-dump-a11e`**（基于 `ps256`）。S 在致命 Fault / `tfm_core_panic` 时会往 USART6 打 `PANIC` 行（CFSR/HFSR/SFSR 等），然后 **halt 不复位**，方便抓 TLS Certificate 阶段的静默崩溃。正式量产不要用本开关（`CONFIG_TFM_HALT_ON_CORE_PANIC`）。
 
-### 相对 `stm32h5f4p256-usart6-bl2-public-key` 改了什么（本分支）
+### 相对 `stm32h5f4p256-usart6-bl2-public-key-ps256` 改了什么（本分支）
 
 Flash 仍是 4 MB 双 bank、S 352 KB / NS 1200 KB、升级槽在 Bank2。相对父分支：
 

@@ -31,6 +31,14 @@ set(MCUBOOT_FIH_PROFILE                    LOW         CACHE STRING    "Fault in
 ################################## LOG LEVEL ###########################################
 set(TFM_SPM_LOG_LEVEL             LOG_LEVEL_INFO       CACHE STRING    "Set default SPM log level as INFO level")
 set(TFM_PARTITION_LOG_LEVEL       LOG_LEVEL_INFO       CACHE STRING    "Set default Secure Partition log level as INFO level")
+# Print SecureFault/UsageFault/HardFault context on USART, then halt.
+# Default TF-M panics with an immediate reset and TFM_EXCEPTION_INFO_DUMP=OFF,
+# so S images contain no Oops/PANIC strings and TLS-size crashes look silent.
+# DUMP_LVL must be ERROR so the register dump is not compiled out when
+# buildtfm.sh prod sets TFM_SPM_LOG_LEVEL=ERROR (VERBOSE is the TF-M default).
+set(TFM_EXCEPTION_INFO_DUMP             ON                CACHE BOOL      "Dump exception context on fatal S faults")
+set(TFM_EXCEPTION_DUMP_LVL              LOG_LEVEL_ERROR   CACHE STRING    "Exception dump log level")
+set(CONFIG_TFM_HALT_ON_CORE_PANIC       ON                CACHE BOOL      "Halt on tfm_core_panic instead of reset")
 set(MCUBOOT_HW_ROLLBACK_PROT            ON          CACHE BOOL      "Enable security counter validation against non-volatile HW counters")
 ################################## Platform-specific configurations ####################################
 set(CONFIG_TFM_USE_TRUSTZONE               ON           CACHE BOOL      "Use TrustZone")
