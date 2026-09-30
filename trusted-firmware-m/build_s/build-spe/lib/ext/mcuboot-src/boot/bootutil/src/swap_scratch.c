@@ -598,11 +598,22 @@ find_last_sector_idx(const struct boot_loader_state *state, uint32_t copy_size)
     int last_sector_idx_secondary;
     uint32_t primary_slot_size;
     uint32_t secondary_slot_size;
+    size_t max_pri;
+    size_t max_sec;
 
     primary_slot_size = 0;
     secondary_slot_size = 0;
     last_sector_idx_primary = 0;
     last_sector_idx_secondary = 0;
+    max_pri = boot_img_num_sectors(state, BOOT_SLOT_PRIMARY);
+    max_sec = boot_img_num_sectors(state, BOOT_SLOT_SECONDARY);
+
+    if (copy_size == 0 || copy_size == 0xffffffffu ||
+        max_pri == 0 || max_sec == 0) {
+        BOOT_LOG_ERR("find_last_sector_idx bad copy_size=0x%x pri=%u sec=%u",
+                     (unsigned)copy_size, (unsigned)max_pri, (unsigned)max_sec);
+        return -1;
+    }
 
     /*
      * Knowing the size of the largest image between both slots, here we
@@ -613,6 +624,11 @@ find_last_sector_idx(const struct boot_loader_state *state, uint32_t copy_size)
     while (1) {
         if ((primary_slot_size < copy_size) ||
             (primary_slot_size < secondary_slot_size)) {
+            if ((size_t)last_sector_idx_primary >= max_pri) {
+                BOOT_LOG_ERR("find_last_sector_idx overflow copy_size=0x%x pri=%u",
+                             (unsigned)copy_size, (unsigned)max_pri);
+                return -1;
+            }
            primary_slot_size += boot_img_sector_size(state,
                                                      BOOT_SLOT_PRIMARY,
                                                      last_sector_idx_primary);
@@ -620,6 +636,11 @@ find_last_sector_idx(const struct boot_loader_state *state, uint32_t copy_size)
         }
         if ((secondary_slot_size < copy_size) ||
             (secondary_slot_size < primary_slot_size)) {
+            if ((size_t)last_sector_idx_secondary >= max_sec) {
+                BOOT_LOG_ERR("find_last_sector_idx overflow copy_size=0x%x sec=%u",
+                             (unsigned)copy_size, (unsigned)max_sec);
+                return -1;
+            }
            secondary_slot_size += boot_img_sector_size(state,
                                                        BOOT_SLOT_SECONDARY,
                                                        last_sector_idx_secondary);
@@ -651,6 +672,9 @@ find_swap_count(const struct boot_loader_state *state, uint32_t copy_size)
     uint32_t swap_count;
 
     last_sector_idx = find_last_sector_idx(state, copy_size);
+    if (last_sector_idx < 0) {
+        return 0;
+    }
 
     swap_count = 0;
 
@@ -927,6 +951,10 @@ swap_run(struct boot_loader_state *state, struct boot_status *bs,
     BOOT_LOG_INF("Starting swap using scratch algorithm.");
 
     last_sector_idx = find_last_sector_idx(state, copy_size);
+    if (last_sector_idx < 0) {
+        BOOT_LOG_ERR("swap_run aborted copy_size=0x%x", (unsigned)copy_size);
+        return;
+    }
 
     swap_idx = 0;
     while (last_sector_idx >= 0) {
@@ -1096,9 +1124,20 @@ boot_read_image_header(struct boot_loader_state *state, int slot,
             goto done;
         }
 
-        swap_count = find_swap_count(state, swap_size);
+        BOOT_LOG_INF("swap resume size=0x%x idx=%u pri/sec sectors=%u/%u",
+                     (unsigned)swap_size, (unsigned)bs->idx,
+                     (unsigned)boot_img_num_sectors(state, BOOT_SLOT_PRIMARY),
+                     (unsigned)boot_img_num_sectors(state, BOOT_SLOT_SECONDARY));
 
-        if (bs->idx - BOOT_STATUS_IDX_0 >= swap_count) {
+        swap_count = find_swap_count(state, swap_size);
+        if (swap_count == 0) {
+            /* Erased/junk swap_size (0xffffffff) or a slot too small for the
+             * recorded copy. Read headers from their natural slots instead of
+             * walking the sector table off the end of SRAM.
+             */
+            BOOT_LOG_ERR("H5F4SWP2 Dropping invalid swap status size=0x%x",
+                         (unsigned)swap_size);
+        } else if (bs->idx - BOOT_STATUS_IDX_0 >= swap_count) {
             /* If all segments have been swapped, the header is located in the other slot */
             hdr_slot = (slot == BOOT_SLOT_PRIMARY) ? BOOT_SLOT_SECONDARY : BOOT_SLOT_PRIMARY;
         } else if (bs->idx - BOOT_STATUS_IDX_0 == swap_count - 1) {
