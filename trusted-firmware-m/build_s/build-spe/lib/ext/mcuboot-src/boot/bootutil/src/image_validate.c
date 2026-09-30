@@ -296,7 +296,9 @@ bootutil_img_validate(struct boot_loader_state *state,
 
     if (img_sz > bootutil_max_image_size(state, fap)) {
         rc = -1;
-        BOOT_LOG_DBG("bootutil_img_validate: TLV beyond image size");
+        BOOT_LOG_ERR("H5F4SWP2 image TLV end=0x%x max=0x%x",
+                     (unsigned)img_sz,
+                     (unsigned)bootutil_max_image_size(state, fap));
         goto out;
     }
 
