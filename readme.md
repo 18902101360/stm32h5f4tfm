@@ -11,8 +11,12 @@
 | `stm32H573P256-SPIFLASH` | **EC-P256** | 基于 `stm32h573p256`：NS 执行槽 1 MB，升级槽在外部 W25Q32 |
 | `stm32H573P256-SPIFLASH-bl2-public-key` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH`：BL2 OTP ROTPK 可只用 `keys/` 公钥 |
 | `stm32H573P256-SPIFLASH-bl2-public-key-ps64` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH-bl2-public-key`：CubeIDE Mbed TLS 4.1.1、CSR/签发；**PS 扩到 64 KB**，S 主槽改为 `0x0C044000` |
+| `stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1` | **EC-P256** | ps64 布局 + 上游 TF-M **v2.3.1**（保留本仓库对 STM/H573 的改动） |
 
-本文档所在分支为 **`stm32H573P256-SPIFLASH-bl2-public-key-ps64`**。升级路径、BL2 公钥 ROTPK 与父分支相同；**PS 为 64 KB，S 烧录地址相对父分支后移 48 KB**。
+本文档所在分支为 **`stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1`**。升级路径、BL2 公钥 ROTPK 与 `ps64` 相同；**PS 为 64 KB，S 烧录地址 `0x0C044000`**。
+
+上游从 TF-M **2.3.0** 合入 **2.3.1**（`TF-Mv2.3.1`）：TF-PSA-Crypto **v1.1.1**、Crypto AEAD nonce 检查、ITS 对齐写清零 / invec unmap、BL2 ECDSA `bootutil_key_cnt` 等。  
+**未覆盖**本仓库已改文件：`otp_provision.c` 仍用 `sync_stm_otp_rotpk.py`；`stm32h573i_dk/config.cmake` 仍为 **EC-P256、OVERWRITE_ONLY、SPI NOR 升级、PS 64 KB**。NS CubeIDE 不用改。
 
 ### 相对 `stm32H573P256-SPIFLASH-bl2-public-key` 改了什么（本分支）
 
