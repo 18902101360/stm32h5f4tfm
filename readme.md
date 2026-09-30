@@ -11,8 +11,13 @@
 | `stm32h5f4p256-usart6` | **EC-P256** | 基于 `stm32h5f4p256`；控制台改为 **USART6 PC6/PC7** |
 | `stm32h5f4p256-usart6-bl2-public-key` | **EC-P256** | 基于 `stm32h5f4p256-usart6`：BL2 OTP ROTPK 可只用 `keys/` 公钥 |
 | `stm32h5f4p256-usart6-bl2-public-key-ps256` | **EC-P256** | 基于 `stm32h5f4p256-usart6-bl2-public-key`：CubeIDE CSR 解析/签发；**PS 256 KB、ITS 32 KB**；S/NS 主槽后移 |
+| `stm32h5f4p256-usart6-bl2-public-key-ps256-1MNS` | **EC-P256** | S 槽 512 KB / NS 1 MB |
+| `stm32h5f4p256-usart6-bl2-public-key-ps256-1MNS-TFM2.3.1` | **EC-P256** | 1MNS 布局 + 上游 TF-M **v2.3.1**（保留本仓库对 STM/H5F4 的改动） |
 
-本文档所在分支为 **`stm32h5f4p256-usart6-bl2-public-key-ps256`**。
+本文档所在分支为 **`stm32h5f4p256-usart6-bl2-public-key-ps256-1MNS-TFM2.3.1`**。
+
+上游从 TF-M **2.3.0** 合入 **2.3.1**（`TF-Mv2.3.1`）：TF-PSA-Crypto **v1.1.1**、Crypto AEAD nonce 检查、ITS 对齐写清零 / invec unmap、BL2 ECDSA `bootutil_key_cnt` 等。  
+**未覆盖**本仓库已改文件：`otp_provision.c` 仍用 `sync_stm_otp_rotpk.py` + `otp_rotpk_hashes.inc`；`stm32h5f4` 平台、USART6、EC-P256、512 KB/1 MB 槽、PS/ITS/`CRYPTO_IOVEC_BUFFER_SIZE=20480` 均保持 1MNS 原样。
 
 ### 相对 `stm32h5f4p256-usart6-bl2-public-key` 改了什么（本分支）
 
