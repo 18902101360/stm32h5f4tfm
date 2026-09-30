@@ -162,7 +162,8 @@ SPE / BL2 / 官方 NS 测试固件只使用仓库根目录的 `./buildtfm.sh` �
 ./buildtfm.sh test --no-clean   # 增量编译（不删 build 目录）
 ```
 
-首次仍需联网下载依赖；之后有 `.deps-cache` 即可离线。
+首次仍需联网下载依赖；之后有 `.deps-cache` 即可离线。  
+从 2.3.0 切到本分支后，若缓存里还是 TF-PSA-Crypto **1.1.0**，离线模式不会拉 **v1.1.1**，补丁会失败。`./buildtfm.sh` 会比对 `config_base.cmake` 的 `TF_PSA_CRYPTO_VERSION` 和缓存里的 `build_info.h`，版本不一致就丢掉 `tf-psa-crypto-src` 再联网。也可手动：`rm -rf trusted-firmware-m/.deps-cache/spe/tf-psa-crypto-src`。工具链必须是 **Arm GNU 14.3**（Ubuntu 自带 gcc 13 会被 TF-M 拒绝）。
 
 ### 依赖
 
