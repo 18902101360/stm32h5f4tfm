@@ -268,6 +268,27 @@ else
     fi
 fi
 
+# FetchContent 离线会沿用 .deps-cache 里的 tf-psa-crypto。
+# 2.3.0→2.3.1 把 TAG 从 v1.1.0 改成 v1.1.1，旧缓存仍在就会不联网、补丁对不上。
+WANT_CRYPTO="$(sed -n 's/^set(TF_PSA_CRYPTO_VERSION[[:space:]]*"\([^"]*\)".*/\1/p' \
+    "${TFM_ROOT}/config/config_base.cmake" | head -1)"
+WANT_CRYPTO="${WANT_CRYPTO#v}"
+CRYPTO_HDR="${LIB_EXT_S}/tf-psa-crypto-src/include/tf-psa-crypto/build_info.h"
+CACHE_CRYPTO_HDR="${TFM_ROOT}/.deps-cache/spe/tf-psa-crypto-src/include/tf-psa-crypto/build_info.h"
+HAVE_CRYPTO=""
+if [[ -f "${CRYPTO_HDR}" ]]; then
+    HAVE_CRYPTO="$(sed -n 's/^#define TF_PSA_CRYPTO_VERSION_STRING[[:space:]]*"\([^"]*\)".*/\1/p' \
+        "${CRYPTO_HDR}" | head -1)"
+elif [[ -f "${CACHE_CRYPTO_HDR}" ]]; then
+    HAVE_CRYPTO="$(sed -n 's/^#define TF_PSA_CRYPTO_VERSION_STRING[[:space:]]*"\([^"]*\)".*/\1/p' \
+        "${CACHE_CRYPTO_HDR}" | head -1)"
+fi
+if [[ -n "${WANT_CRYPTO}" && -n "${HAVE_CRYPTO}" && "${HAVE_CRYPTO}" != "${WANT_CRYPTO}" ]]; then
+    echo ">>> TF-PSA-Crypto 缓存 ${HAVE_CRYPTO} ≠ 配置 ${WANT_CRYPTO}，删除缓存并改为在线拉取"
+    rm -rf "${LIB_EXT_S}/tf-psa-crypto-src" \
+           "${TFM_ROOT}/.deps-cache/spe/tf-psa-crypto-src"
+fi
+
 # 有 lib/ext 就离线，没有就自动在线下载
 OFFLINE=1
 for lib in qcbor mcuboot cmsis t_cose tf-psa-crypto tf-m-extras; do

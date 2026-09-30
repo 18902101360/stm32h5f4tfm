@@ -304,7 +304,8 @@ imgtool verify trusted-firmware-m/build_ns/bin/tfm_ns_signed.bin
 
 ### 清编译（不重新下载依赖）
 
-不要手动 `rm -rf trusted-firmware-m/build_s`。`./buildtfm.sh` 默认先跑 `scripts/clean_tfm_build.sh`：只清编译产物，依赖缓存在 `trusted-firmware-m/.deps-cache/`。增量：`./buildtfm.sh test --no-clean`。
+不要手动 `rm -rf trusted-firmware-m/build_s`。`./buildtfm.sh` 默认先跑 `scripts/clean_tfm_build.sh`：只清编译产物，依赖缓存在 `trusted-firmware-m/.deps-cache/`。增量：`./buildtfm.sh test --no-clean`。  
+从 2.3.0 切到本分支后，若缓存里还是 TF-PSA-Crypto **1.1.0**，离线模式不会拉 **v1.1.1**，补丁会失败。`./buildtfm.sh` 会比对 `config_base.cmake` 的 `TF_PSA_CRYPTO_VERSION` 和缓存里的 `build_info.h`，版本不一致就丢掉 `tf-psa-crypto-src` 再联网。也可手动：`rm -rf trusted-firmware-m/.deps-cache/spe/tf-psa-crypto-src`。工具链必须是 **Arm GNU 14.3**（Ubuntu 自带 gcc 13 会被 TF-M 拒绝）。
 
 
 ### 一键回归烧录（Linux）
