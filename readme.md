@@ -18,6 +18,8 @@
 上游从 TF-M **2.3.0** 合入 **2.3.1**（`TF-Mv2.3.1`）：TF-PSA-Crypto **v1.1.1**、Crypto AEAD nonce 检查、ITS 对齐写清零 / invec unmap、BL2 ECDSA `bootutil_key_cnt` 等。  
 **未覆盖**本仓库已改文件：`otp_provision.c` 仍用 `sync_stm_otp_rotpk.py`；`stm32h573i_dk/config.cmake` 仍为 **EC-P256、OVERWRITE_ONLY、SPI NOR 升级、PS 64 KB**。NS CubeIDE 不用改。
 
+从 2.3.0 板级分支升到本分支的操作步骤见仓库根目录 [`TF-M-2.3.1升级步骤.md`](TF-M-2.3.1升级步骤.md)。
+
 ### 相对 `stm32H573P256-SPIFLASH-bl2-public-key` 改了什么（本分支）
 
 1. 把仓库根目录原来的 `tfmcubeideproject.7z` **整份展开覆盖** `tfmcubeideproject/`，再删掉压缩包（不要再当源码树用）。
