@@ -70,6 +70,13 @@ static const w25_gpio_cfg_t w25_gpio_profiles[] = {
         .mosi = { W25_GPIO_PORT_E, GPIO_PIN_14 },
         .cs   = { W25_GPIO_PORT_E, GPIO_PIN_11 },
     },
+    {
+        .name = "PA5/PA6/PA7 CS=PC4",
+        .sck  = { W25_GPIO_PORT_A, GPIO_PIN_5 },
+        .miso = { W25_GPIO_PORT_A, GPIO_PIN_6 },
+        .mosi = { W25_GPIO_PORT_A, GPIO_PIN_7 },
+        .cs   = { W25_GPIO_PORT_C, GPIO_PIN_4 },
+    },
 };
 #define W25_GPIO_PROFILE_COUNT \
     (sizeof(w25_gpio_profiles) / sizeof(w25_gpio_profiles[0]))
