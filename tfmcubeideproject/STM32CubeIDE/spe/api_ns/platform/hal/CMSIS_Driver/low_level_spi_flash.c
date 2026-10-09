@@ -111,7 +111,6 @@ static ARM_FLASH_INFO SPI_FLASH0_DEV_DATA = {
 
 static ARM_FLASH_STATUS SPI_FLASH0_STATUS = {0, 0, 0};
 static uint8_t spi_inited;
-static const w25_gpio_cfg_t *w25_active;
 static GPIO_TypeDef *w25_sck;
 static GPIO_TypeDef *w25_miso;
 static GPIO_TypeDef *w25_mosi;
@@ -290,7 +289,6 @@ static void w25_restore_unused(const w25_gpio_cfg_t *keep)
 
 static void w25_select_cfg(const w25_gpio_cfg_t *cfg)
 {
-    w25_active = cfg;
     w25_sck = w25_port_data(cfg->sck.port);
     w25_miso = w25_port_data(cfg->miso.port);
     w25_mosi = w25_port_data(cfg->mosi.port);
@@ -718,7 +716,6 @@ static int32_t Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
         w25_restore_cfg(cfg, NULL);
     }
 
-    w25_active = NULL;
     SPI_FLASH0_STATUS.error = 1;
     SPI_FLASH_LOG_ERR("W25Q32 JEDEC mismatch - SPI NOR not ready (%02x:%02x:%02x)",
                       last_id[0], last_id[1], last_id[2]);
