@@ -63,16 +63,13 @@ static const w25_gpio_cfg_t w25_gpio_profiles[] = {
         .mosi = { W25_GPIO_PORT_A, GPIO_PIN_7 },
         .cs   = { W25_GPIO_PORT_B, GPIO_PIN_2 },
     },
-    /*
-     * Example second board (uncomment and set pins):
-     * {
-     *     .name = "PBx/PBy/...",
-     *     .sck  = { W25_GPIO_PORT_B, GPIO_PIN_3 },
-     *     .miso = { W25_GPIO_PORT_B, GPIO_PIN_4 },
-     *     .mosi = { W25_GPIO_PORT_B, GPIO_PIN_5 },
-     *     .cs   = { W25_GPIO_PORT_B, GPIO_PIN_6 },
-     * },
-     */
+    {
+        .name = "PE12/PE13/PE14 CS=PE11",
+        .sck  = { W25_GPIO_PORT_E, GPIO_PIN_12 },
+        .miso = { W25_GPIO_PORT_E, GPIO_PIN_13 },
+        .mosi = { W25_GPIO_PORT_E, GPIO_PIN_14 },
+        .cs   = { W25_GPIO_PORT_E, GPIO_PIN_11 },
+    },
 };
 #define W25_GPIO_PROFILE_COUNT \
     (sizeof(w25_gpio_profiles) / sizeof(w25_gpio_profiles[0]))
