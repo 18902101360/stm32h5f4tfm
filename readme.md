@@ -19,6 +19,8 @@
 上游从 TF-M **2.3.0** 合入 **2.3.1**（`TF-Mv2.3.1`）：TF-PSA-Crypto **v1.1.1**、Crypto AEAD nonce 检查、ITS 对齐写清零 / invec unmap、BL2 ECDSA `bootutil_key_cnt` 等。  
 **未覆盖**本仓库已改文件：`otp_provision.c` 仍用 `sync_stm_otp_rotpk.py` + `otp_rotpk_hashes.inc`；`stm32h5f4` 平台、USART6、EC-P256、512 KB/1 MB 槽、PS/ITS/`CRYPTO_IOVEC_BUFFER_SIZE=20480` 均保持 1MNS 原样。
 
+从 2.3.0 板级分支升到本分支的操作步骤见仓库根目录 [`TF-M-2.3.1升级步骤.md`](TF-M-2.3.1升级步骤.md)。
+
 ### 相对 `stm32h5f4p256-usart6-bl2-public-key` 改了什么（本分支）
 
 Flash 仍是 4 MB 双 bank。相对父分支：
