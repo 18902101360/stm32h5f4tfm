@@ -31,6 +31,11 @@
 
 BOOT_LOG_MODULE_DECLARE(mcuboot);
 
+/* Linked into BL2 so buildtfm.sh can prove this swap-status guard is present. */
+#if defined(MCUBOOT_SWAP_USING_SCRATCH)
+__attribute__((used)) static const char mcuboot_h5f4_swap_guard[] = "H5F4SWP2";
+#endif
+
 #if defined(MCUBOOT_SWAP_USING_SCRATCH) || defined(MCUBOOT_SWAP_USING_MOVE) || defined(MCUBOOT_SWAP_USING_OFFSET)
 int
 swap_erase_trailer_sectors(const struct boot_loader_state *state,
@@ -162,6 +167,14 @@ swap_read_status(struct boot_loader_state *state, struct boot_status *bs)
     uint8_t swap_info;
     int rc;
 
+#if defined(MCUBOOT_SWAP_USING_SCRATCH)
+    /* Address operand creates a relocation. (void)array[0] is a no-op and
+     * --gc-sections then drops H5F4SWP2 from bl2.bin.
+     */
+    __asm__ volatile ("" :: "r"(mcuboot_h5f4_swap_guard));
+#endif
+
+
     bs->source = swap_status_source(state);
     switch (bs->source) {
     case BOOT_STATUS_SOURCE_NONE:
@@ -200,6 +213,39 @@ swap_read_status(struct boot_loader_state *state, struct boot_status *bs)
 
         /* Extract the swap type info */
         bs->swap_type = BOOT_GET_SWAP_TYPE(swap_info);
+        /*
+         * magic=good and copy_done=unset makes MCUBoot treat the primary as
+         * an in-progress swap. A factory image, or a small slot whose payload
+         * overlaps the status area sized for MCUBOOT_MAX_IMG_SECTORS, then
+         * feeds find_last_sector_idx a swap_size of 0xffffffff (erased
+         * trailer) and walks the sector table off the end of SRAM.
+         */
+        if (!boot_status_is_reset(bs)) {
+            uint32_t swap_size = 0;
+            uint32_t slot_sz = flash_area_get_size(fap);
+
+            rc = boot_read_swap_size(fap, &swap_size);
+            BOOT_LOG_INF("swap status idx=%u state=%u size=0x%x slot=0x%x",
+                         (unsigned)bs->idx, (unsigned)bs->state,
+                         (unsigned)swap_size, (unsigned)slot_sz);
+            if (rc != 0 || swap_size == 0 || swap_size == 0xffffffffu ||
+                swap_size > slot_sz) {
+                BOOT_LOG_ERR("H5F4SWP2 Dropping invalid swap status size=0x%x",
+                             (unsigned)swap_size);
+                bs->idx = BOOT_STATUS_IDX_0;
+                bs->state = BOOT_STATUS_STATE_0;
+#if defined(MCUBOOT_SWAP_USING_OFFSET)
+                bs->op = BOOT_STATUS_OP_SWAP;
+#else
+                bs->op = BOOT_STATUS_OP_MOVE;
+#endif
+                bs->use_scratch = 0;
+                bs->swap_size = 0;
+                bs->source = BOOT_STATUS_SOURCE_NONE;
+                bs->swap_type = BOOT_SWAP_TYPE_NONE;
+                rc = 0;
+            }
+        }
     }
 
 done:

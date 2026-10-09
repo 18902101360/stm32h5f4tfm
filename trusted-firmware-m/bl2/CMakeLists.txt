@@ -45,19 +45,14 @@ target_include_directories(bl2_crypto_config
 
 # Check if the p256m driver is enabled in the config file, as that will require
 # to build some 3rd party specific source code in addition to TF-PSA-Crypto source.
-# Note that 0 means SUCCESS here, 1 means FAILURE
-set(MBEDTLS_P256M_NOT_FOUND 1)
-execute_process(COMMAND
-    ${Python3_EXECUTABLE}
-    ${TF_PSA_CRYPTO_PATH}/scripts/config.py -f "${MCUBOOT_PSA_CRYPTO_CONFIG_FILEPATH}" get MBEDTLS_PSA_P256M_DRIVER_ENABLED
-    RESULT_VARIABLE MBEDTLS_P256M_NOT_FOUND)
-
-# If the enablement is conditional, the script would still mark it as found
-if (${MBEDTLS_P256M_NOT_FOUND} EQUAL 0)
+file(STRINGS "${MCUBOOT_PSA_CRYPTO_CONFIG_FILEPATH}" _p256m_line
+    REGEX "^[ \t]*#define[ \t]+MBEDTLS_PSA_P256M_DRIVER_ENABLED")
+if(_p256m_line)
     set(MBEDTLS_P256M_ENABLED true)
 else()
     set(MBEDTLS_P256M_ENABLED false)
 endif()
+message(VERBOSE "BL2 using P256-M driver: ${MBEDTLS_P256M_ENABLED}")
 
 ############################### BL2_CRYPTO #####################################
 
@@ -68,8 +63,8 @@ set(build_sha_256    "$<NOT:${build_sha_384}>")
 set(build_p256m      "$<IF:$<BOOL:${MBEDTLS_P256M_ENABLED}>,$<AND:${is_ec_signature},${is_256_bit_curve}>,0>")
 
 list(APPEND BL2_CRYPTO_SRC
-    $<$<OR:$<BOOL:${MCUBOOT_USE_PSA_CRYPTO}>,$<BOOL:${MCUBOOT_USE_MBED_TLS}>>:${CMAKE_SOURCE_DIR}/lib/ext/thin-psa-crypto-core/thin_psa_crypto_core.c>
-    ${TF_PSA_CRYPTO_PATH}/drivers/builtin/src/aes.c
+    $<$<BOOL:${MCUBOOT_USE_PSA_CRYPTO}>:${CMAKE_SOURCE_DIR}/lib/ext/thin-psa-crypto-core/thin_psa_crypto_core.c>
+    $<$<BOOL:${MCUBOOT_ENC_IMAGES}>:${TF_PSA_CRYPTO_PATH}/drivers/builtin/src/aes.c>
     ${TF_PSA_CRYPTO_PATH}/platform/platform.c
     ${TF_PSA_CRYPTO_PATH}/platform/platform_util.c
     ${TF_PSA_CRYPTO_PATH}/platform/memory_buffer_alloc.c
@@ -97,7 +92,7 @@ list(APPEND BL2_CRYPTO_SRC
     $<${is_rsa_signature}:${TF_PSA_CRYPTO_PATH}/extras/md.c>
     $<$<AND:${is_ec_signature},${build_p256m}>:${TF_PSA_CRYPTO_PATH}/drivers/p256-m/p256-m_driver_entrypoints.c>
     $<$<AND:${is_ec_signature},${build_p256m}>:${TF_PSA_CRYPTO_PATH}/drivers/p256-m/p256-m/p256-m.c>
-    $<$<BOOL:${MCUBOOT_ENCRYPT_KW}>:${TF_PSA_CRYPTO_PATH}/drivers/builtin/src/nist_kw.c>
+    $<$<BOOL:${MCUBOOT_ENCRYPT_KW}>:${TF_PSA_CRYPTO_PATH}/extras/nist_kw.c>
     $<$<BOOL:${MCUBOOT_ENCRYPT_KW}>:${TF_PSA_CRYPTO_PATH}/utilities/constant_time.c>
     # Include __weak stub implementation, serving as a fallback for random number generation in case no other RNG is provided.
     $<$<NOT:$<BOOL:${CRYPTO_HW_ACCELERATOR}>>:src/psa_stub_rng.c>
