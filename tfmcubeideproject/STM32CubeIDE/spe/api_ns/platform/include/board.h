@@ -18,6 +18,9 @@
   */
 #ifndef __BOARD_H__
 #define __BOARD_H__
+
+#include <stdint.h>
+
 /* config for usart */
 
 #if 0
@@ -54,7 +57,40 @@
 #define FLASH0_PROG_UNIT 0x10
 #define FLASH0_ERASED_VAL 0xff
 
-/* External W25Q32 on SPI1 (4-wire): SCK=PA5, MISO=PA6, MOSI=PA7, CS=PB2 */
+/*
+ * External W25Q32 GPIO bit-bang profiles.
+ * BL2/NS try each entry, read JEDEC ID (ef:40:16). The first hit is kept;
+ * other profiles' pins are restored to analog reset. If none hit, all
+ * profile pins are restored and boot continues on internal flash.
+ *
+ * Do not list USART1 (PA9/PA10) or SWD (PA13/PA14).
+ * Add another board by appending a w25_gpio_cfg_t (see w25_gpio_profiles[]
+ * in low_level_spi_flash.c).
+ */
+#define W25_GPIO_PORT_A                        0U
+#define W25_GPIO_PORT_B                        1U
+#define W25_GPIO_PORT_C                        2U
+#define W25_GPIO_PORT_D                        3U
+#define W25_GPIO_PORT_E                        4U
+#define W25_GPIO_PORT_F                        5U
+#define W25_GPIO_PORT_G                        6U
+#define W25_GPIO_PORT_H                        7U
+#define W25_GPIO_PORT_I                        8U
+
+typedef struct {
+    uint8_t  port; /* W25_GPIO_PORT_* */
+    uint16_t pin;  /* GPIO_PIN_* */
+} w25_gpio_pad_t;
+
+typedef struct {
+    const char *name;
+    w25_gpio_pad_t sck;
+    w25_gpio_pad_t miso;
+    w25_gpio_pad_t mosi;
+    w25_gpio_pad_t cs;
+} w25_gpio_cfg_t;
+
+/* Default / first-board pads (SPI1 positions, bit-bang, AF unused). */
 #define SPI1_FLASH_SCK_PORT                    GPIOA
 #define SPI1_FLASH_SCK_PIN                     GPIO_PIN_5
 #define SPI1_FLASH_SCK_AF                      GPIO_AF5_SPI1
