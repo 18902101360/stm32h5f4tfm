@@ -108,10 +108,10 @@ set(CONFIG_TFM_DISABLE_CP10CP11            OFF CACHE BOOL  "This disables the co
 set(CONFIG_TFM_ENABLE_CP10CP11             ON CACHE BOOL   "Make FPU and MVE operational when SPE and/or NSPE require FPU or MVE usage. This alone only enables the coprocessors CP10-CP11, whereas CONFIG_TFM_FLOAT_ABI=hard along with  CONFIG_TFM_ENABLE_FP, CONFIG_TFM_ENABLE_MVE or CONFIG_TFM_ENABLE_MVE_FP compiles the code with hardware FP or MVE instructions and ABI.")
 set(CONFIG_TFM_LAZY_STACKING               ON   CACHE BOOL   "Enable/disable lazy stacking")
 
-set(TFM_VERSION                            2.3.0)
+set(TFM_VERSION                            2.3.1)
 set(TFM_NS_MANAGE_NSID                     OFF)
 
-set(RECOMMENDED_TFM_TESTS_VERSION          TF-Mv2.3.0)
+set(RECOMMENDED_TFM_TESTS_VERSION          TF-Mv2.3.1)
 set(CHECK_TFM_TESTS_VERSION OFF)
 
 set(TFM_MERGE_HEX_FILES                    OFF                 CACHE BOOL   "Create merged hex file in the end of the build")

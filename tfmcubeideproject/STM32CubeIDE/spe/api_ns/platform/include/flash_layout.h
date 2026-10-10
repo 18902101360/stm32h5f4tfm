@@ -31,9 +31,10 @@
  * size, so the internal S execute slot is also 512 KB (image is padded).
  * Internal NS execute is the whole of Bank2 (0x100000, 1 MB) so it does not
  * cross the dual-bank boundary. NS programs the NOR directly (w25q32_*).
- * BL2 only reads the NOR (no erase/program). CubeProgrammer still burns
- * BL2/S/NS primary in internal flash. psa_fwu_query() still reports S/NS
- * versions; PSA start/write/install is disabled.
+ * BL2 reads the NOR; after a successful overwrite it erases that download
+ * slot so the next boot does not hash leftover S/NS images. CubeProgrammer
+ * still burns BL2/S/NS primary in internal flash. psa_fwu_query() still
+ * reports S/NS versions; PSA start/write/install is disabled.
  */
 #define EXTERNAL_FLASH
 #define SPI_FLASH_TOTAL_SIZE            (0x400000)   /* W25Q32 4 MBytes */
