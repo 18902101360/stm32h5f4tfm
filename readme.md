@@ -39,7 +39,11 @@
 | 2 | PE12 | PE13 | PE14 | PE11 |
 | 3 | PA5 | PA6 | PA7 | PC4 |
 
-确认已烧进新 BL2：USART1 115200 上电日志带组名，例如 `W25 GPIO PA5/PA6/PA7 CS=PB2 JEDEC ef:40:16`。旧 BL2 只有 `W25Q32 JEDEC ID`，没有 `W25 GPIO`。必须重烧 **`bl2.hex`**，只换 S/NS 看不到这次改动。
+确认已烧进新 BL2：USART1 115200 上电日志带组名，例如 `W25 GPIO PE12/PE13/PE14 CS=PE11 JEDEC ef:40:16`。旧 BL2 只有 `W25Q32 JEDEC ID`，没有 `W25 GPIO`。必须重烧 **`bl2.hex`**，只换 S/NS 看不到这次改动。
+
+**升级（NS 写 W25）也要用同一份驱动。** 只把新 `bl2.hex` 拷进 `windows-tfm-tools` 不够：NS 的 `low_level_spi_flash.c`（CubeIDE `spe/api_ns`）必须一起换成带 GPIO 表的版本并重新编译 NS。否则 BL2 能在 PE11–PE14 上读到 JEDEC，NS 仍按 PA5/PA6/PA7+PB2 写，升级会失败。
+
+探测前会先把表里**所有 CS 拉高**，避免 PE11 悬空为低时，先探 PA 组把片子选中。BL2 用完 NOR 后把命中的脚标成 **NSEC**，NS 才能写。
 
 ### 相对 `stm32H573P256-SPIFLASH-bl2-public-key` 改了什么（`ps64` / `TFM2.3.1`）
 
