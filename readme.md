@@ -12,15 +12,36 @@
 | `stm32H573P256-SPIFLASH-bl2-public-key` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH`：BL2 OTP ROTPK 可只用 `keys/` 公钥 |
 | `stm32H573P256-SPIFLASH-bl2-public-key-ps64` | **EC-P256** | 基于 `stm32H573P256-SPIFLASH-bl2-public-key`：CubeIDE Mbed TLS 4.1.1、CSR/签发；**PS 扩到 64 KB**，S 主槽改为 `0x0C044000` |
 | `stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1` | **EC-P256** | ps64 布局 + 上游 TF-M **v2.3.1**（保留本仓库对 STM/H573 的改动） |
+| `stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1-gpio` | **EC-P256** | 基于上一行：BL2/NS 按 GPIO 表探测 W25Q32，适配不同板卡接线 |
 
-本文档所在分支为 **`stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1`**。升级路径、BL2 公钥 ROTPK 与 `ps64` 相同；**PS 为 64 KB，S 烧录地址 `0x0C044000`**。
+本文档所在分支为 **`stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1-gpio`**。Flash 布局、升级路径、BL2 公钥 ROTPK 与 `ps64-TFM2.3.1` 相同；**PS 为 64 KB，S 烧录地址 `0x0C044000`**。
 
 上游从 TF-M **2.3.0** 合入 **2.3.1**（`TF-Mv2.3.1`）：TF-PSA-Crypto **v1.1.1**、Crypto AEAD nonce 检查、ITS 对齐写清零 / invec unmap、BL2 ECDSA `bootutil_key_cnt` 等。  
 **未覆盖**本仓库已改文件：`otp_provision.c` 仍用 `sync_stm_otp_rotpk.py`；`stm32h573i_dk/config.cmake` 仍为 **EC-P256、OVERWRITE_ONLY、SPI NOR 升级、PS 64 KB**。NS CubeIDE 不用改。
 
-从 2.3.0 板级分支升到本分支的操作步骤见仓库根目录 [`TF-M-2.3.1升级步骤.md`](TF-M-2.3.1升级步骤.md)。
+从 2.3.0 板级分支升到 TF-M 2.3.1 的操作步骤见仓库根目录 [`TF-M-2.3.1升级步骤.md`](TF-M-2.3.1升级步骤.md)。
 
-### 相对 `stm32H573P256-SPIFLASH-bl2-public-key` 改了什么（本分支）
+### 相对 `stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1` 改了什么（本分支）
+
+外部 W25Q32 仍是 GPIO 模拟 SPI（Mode 0），不走硬件 SPI1。本分支把引脚抽成配置表，上电探测 JEDEC，用来适配不同板卡接线。
+
+1. 结构体 `w25_gpio_cfg_t`（SCK / MISO / MOSI / CS 的 port + pin），数组 `w25_gpio_profiles[]` 在 `trusted-firmware-m/platform/ext/target/stm/common/hal/CMSIS_Driver/low_level_spi_flash.c`。
+2. BL2 和 NS 用同一张表，逐组配置 GPIO，读 JEDEC `ef:40:16`。第一组读到就认定该板卡。
+3. 命中后把**未使用**的其它组引脚 `DeInit` 回模拟，TZ 属性标回 SEC。
+4. 全部读不到：所有探测过的引脚同样恢复默认，返回原来的 JEDEC 错误，BL2 **继续从内部 primary 启动**（与改前失败路径相同）。
+5. 不要把 USART1（PA9/PA10）或 SWD（PA13/PA14）写进表。换板只需在数组里追加一项。
+
+当前表（探测顺序）：
+
+| 顺序 | SCK | MISO | MOSI | CS |
+|------|-----|------|------|-----|
+| 1 | PA5 | PA6 | PA7 | PB2 |
+| 2 | PE12 | PE13 | PE14 | PE11 |
+| 3 | PA5 | PA6 | PA7 | PC4 |
+
+确认已烧进新 BL2：USART1 115200 上电日志带组名，例如 `W25 GPIO PA5/PA6/PA7 CS=PB2 JEDEC ef:40:16`。旧 BL2 只有 `W25Q32 JEDEC ID`，没有 `W25 GPIO`。必须重烧 **`bl2.hex`**，只换 S/NS 看不到这次改动。
+
+### 相对 `stm32H573P256-SPIFLASH-bl2-public-key` 改了什么（`ps64` / `TFM2.3.1`）
 
 1. 把仓库根目录原来的 `tfmcubeideproject.7z` **整份展开覆盖** `tfmcubeideproject/`，再删掉压缩包（不要再当源码树用）。
 2. 用本仓库当前 SPE 导出和 `sign_kit` **覆盖 7z 里旧的布局**（7z 仍是旧的 320/576 KB、SWAP；当前必须是 **S 512 KB / NS 1 MB Bank2、`OVERWRITE_ONLY`**）。
@@ -86,7 +107,7 @@ Flash 布局、升级路径、签名算法与 `stm32H573P256-SPIFLASH` 相同。
 | Bank1 空隙 | `0x0C0C4000–0x0C0FFFFF`（240 KB，SECWM1 保持 Secure） |
 | S 下载 | W25Q32 `0x100000`，512 KB（命令偏移，不是片上 Bank2） |
 | NS 下载 | W25Q32 `0x180000`，1 MB |
-| 引脚 | SCK=PA5, MISO=PA6, MOSI=PA7, CS=PB2 |
+| 引脚 | 见上表 `w25_gpio_profiles[]`：先 PA5/PA6/PA7+PB2，再 PE12/PE13/PE14+PE11，再 PA5/PA6/PA7+PC4 |
 
 TrustZone 片上 Flash 的 S/NS 分界用 **FLASH SECWM**（H5 没有 GTZC-MPCWM 管内部 Flash）：
 
@@ -383,6 +404,8 @@ NS 用 mbedTLS 4.x + PSA 走 TF-M Crypto 分区时，有两块独立的安全侧
 - 增加 windows-tfm-tools 该工具是windows系统的使用的回归脚本和烧录工具。
 
 - 本分支增加 Linux 一键回归烧录脚本 `flash_stm32h573.sh`（对应 Windows 的 `windows-tfm-tools\tfm_update.bat`）。
+
+- 本分支（`stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1-gpio`）相对 `stm32H573P256-SPIFLASH-bl2-public-key-ps64-TFM2.3.1`：W25Q32 GPIO 配置表 + JEDEC 探测，适配 PA5/PA6/PA7+PB2、PE12/PE13/PE14+PE11、PA5/PA6/PA7+PC4；未命中则恢复 GPIO 并从内部 flash 继续启动。
 
 ## 文件统计
 

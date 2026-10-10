@@ -16,7 +16,8 @@ extern "C" {
 extern ARM_DRIVER_FLASH TFM_Driver_SPI_FLASH0;
 
 /*
- * W25Q32 helpers. Pins: GPIO bit-bang on SPI1 pads PA5/PA6/PA7, CS PB2.
+ * W25Q32 helpers. GPIO bit-bang; pin sets are w25_gpio_profiles[]
+ * (default SPI1 pads PA5/PA6/PA7, CS PB2).
  * BL2 only uses init/read/JEDEC; after a successful overwrite it also
  * erases that download slot (w25q32_erase_range). Program remains a no-op.
  * NS erases and writes signed tfm_s_signed.bin / tfm_ns_signed.bin into
